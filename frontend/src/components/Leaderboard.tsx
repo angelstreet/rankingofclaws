@@ -1,82 +1,79 @@
-import { Agent } from '../types';
+import type { Agent } from '../types';
 import { formatTokens, countryToFlag, getRankTitle, getRankColor, formatLastActive } from '../utils/format';
 import AgentCard from './AgentCard';
 
 interface Props { agents: Agent[]; loading: boolean; }
 
-const TOP3_ROW: Record<number, string> = {
-  1: 'bg-yellow-950/30 border-l-4 border-yellow-400',
-  2: 'bg-gray-800/40 border-l-4 border-gray-400',
-  3: 'bg-orange-950/20 border-l-4 border-orange-600',
-};
-
 export default function Leaderboard({ agents, loading }: Props) {
   if (loading) {
     return (
-      <div className="flex flex-col gap-2">
+      <div>
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-14 bg-gray-800/50 rounded-xl animate-pulse" />
+          <div key={i} style={{height:'3.5rem', background:'rgba(30,30,40,0.5)', borderRadius:'0.75rem', marginBottom:'0.5rem'}} />
         ))}
       </div>
     );
   }
 
   if (agents.length === 0) {
-    return <div className="text-center text-gray-500 py-16">No agents found.</div>;
+    return <div style={{textAlign:'center', color:'#6b7280', padding:'4rem 0'}}>No agents found.</div>;
   }
+
+  const TOP3_BG: Record<number, string> = {
+    1: 'rgba(120,90,0,0.2)',
+    2: 'rgba(80,80,80,0.2)',
+    3: 'rgba(100,60,20,0.15)',
+  };
+  const TOP3_BORDER_LEFT: Record<number, string> = {
+    1: '4px solid #FFD700',
+    2: '4px solid #C0C0C0',
+    3: '4px solid #CD7F32',
+  };
 
   return (
     <>
-      {/* Mobile: cards */}
-      <div className="block sm:hidden">
+      {/* Mobile cards */}
+      <div className="sm:hidden">
         {agents.map(agent => <AgentCard key={agent.rank} agent={agent} />)}
       </div>
 
-      {/* Desktop: table */}
-      <div className="hidden sm:block overflow-hidden rounded-2xl border border-gray-800">
-        <table className="w-full">
+      {/* Desktop table */}
+      <div className="hidden sm:block" style={{borderRadius:'1rem', overflow:'hidden', border:'1px solid #1f2937'}}>
+        <table style={{width:'100%', borderCollapse:'collapse'}}>
           <thead>
-            <tr className="bg-gray-900 text-gray-400 text-xs uppercase tracking-wider">
-              <th className="px-4 py-3 text-left w-20">Rank</th>
-              <th className="px-4 py-3 text-left">Agent</th>
-              <th className="px-4 py-3 text-left w-24">Country</th>
-              <th className="px-4 py-3 text-right w-32">Tokens</th>
-              <th className="px-4 py-3 text-right w-32">Last Active</th>
+            <tr style={{background:'#0d0d14'}}>
+              {['Rank','Agent','Country','Tokens','Last Active'].map(h => (
+                <th key={h} style={{padding:'0.75rem 1rem', textAlign: h==='Tokens'||h==='Last Active' ? 'right' : 'left', color:'#6b7280', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'0.08em', fontWeight:600}}>
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {agents.map(agent => {
               const { title, icon } = getRankTitle(agent.rank);
               const rankColor = getRankColor(agent.rank);
-              const rowCls = TOP3_ROW[agent.rank] || 'border-l-4 border-transparent hover:bg-gray-800/30';
-              const textSize = agent.rank <= 3 ? 'text-base font-bold' : 'text-sm';
+              const bg = TOP3_BG[agent.rank] || 'transparent';
+              const bl = TOP3_BORDER_LEFT[agent.rank] || '4px solid transparent';
               return (
-                <tr
-                  key={agent.rank}
-                  className={`border-b border-gray-800/50 transition-colors ${rowCls}`}
-                >
-                  <td className="px-4 py-3">
-                    <span
-                      className={`font-black ${agent.rank <= 3 ? 'text-2xl' : 'text-lg'}`}
-                      style={{ color: rankColor }}
-                    >
+                <tr key={agent.rank} style={{background:bg, borderLeft:bl, borderBottom:'1px solid #1f293780', transition:'background 0.15s'}}>
+                  <td style={{padding:'0.75rem 1rem'}}>
+                    <span style={{color:rankColor, fontWeight:900, fontSize:agent.rank<=3?'1.75rem':'1.2rem'}}>
                       #{agent.rank}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className={`text-white ${textSize}`}>{agent.name}</div>
-                    <div className="text-xs mt-0.5" style={{ color: rankColor }}>
-                      {icon} {title}
-                    </div>
+                  <td style={{padding:'0.75rem 1rem'}}>
+                    <div style={{color:'#fff', fontWeight: agent.rank<=3?700:400, fontSize:agent.rank<=3?'1rem':'0.875rem'}}>{agent.name}</div>
+                    <div style={{color:rankColor, fontSize:'0.7rem', marginTop:'0.2rem'}}>{icon} {title}</div>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className="text-xl">{countryToFlag(agent.country)}</span>
-                    <span className="text-gray-400 text-xs ml-1">{agent.country}</span>
+                  <td style={{padding:'0.75rem 1rem'}}>
+                    <span style={{fontSize:'1.25rem'}}>{countryToFlag(agent.country)}</span>
+                    <span style={{color:'#6b7280', fontSize:'0.75rem', marginLeft:'0.25rem'}}>{agent.country}</span>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="text-yellow-300 font-bold text-lg">{formatTokens(agent.totalTokens)}</span>
+                  <td style={{padding:'0.75rem 1rem', textAlign:'right'}}>
+                    <span style={{color:'#fde047', fontWeight:700, fontSize:'1.1rem'}}>{formatTokens(agent.totalTokens)}</span>
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-500 text-sm">
+                  <td style={{padding:'0.75rem 1rem', textAlign:'right', color:'#6b7280', fontSize:'0.875rem'}}>
                     {formatLastActive(agent.lastActive)}
                   </td>
                 </tr>

@@ -1,4 +1,4 @@
-import { TimePeriod } from '../types';
+import type { TimePeriod } from '../types';
 
 interface Props {
   countries: string[];
@@ -21,7 +21,7 @@ export default function Filters({ countries, selectedCountry, onCountryChange, p
       <select
         value={selectedCountry}
         onChange={e => onCountryChange(e.target.value)}
-        className="bg-gray-900 border border-gray-700 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-400 min-h-[44px]"
+        style={{background:'#111118', border:'1px solid #374151', color:'#e5e7eb', borderRadius:'0.5rem', padding:'0.5rem 0.75rem', fontSize:'0.875rem', minHeight:'44px'}}
       >
         <option value="">🌐 All countries</option>
         {countries.map(c => (
@@ -29,16 +29,22 @@ export default function Filters({ countries, selectedCountry, onCountryChange, p
         ))}
       </select>
 
-      <div className="flex bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+      <div style={{display:'flex', background:'#111118', border:'1px solid #374151', borderRadius:'0.5rem', overflow:'hidden'}}>
         {PERIODS.map(p => (
           <button
             key={p.value}
             onClick={() => onPeriodChange(p.value)}
-            className={`px-3 py-2 text-sm min-h-[44px] transition-colors ${
-              period === p.value
-                ? 'bg-yellow-400 text-black font-bold'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
-            }`}
+            style={{
+              padding:'0.5rem 0.75rem',
+              fontSize:'0.875rem',
+              minHeight:'44px',
+              border:'none',
+              cursor:'pointer',
+              transition:'all 0.15s',
+              background: period === p.value ? '#FFD700' : 'transparent',
+              color: period === p.value ? '#000' : '#9ca3af',
+              fontWeight: period === p.value ? '700' : '400',
+            }}
           >
             {p.label}
           </button>

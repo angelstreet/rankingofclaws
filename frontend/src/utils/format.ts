@@ -33,8 +33,8 @@ export function formatLastActive(iso: string): string {
   const diffMs = now.getTime() - d.getTime();
   const diffH = Math.floor(diffMs / 3600000);
   if (diffH < 1) return 'Just now';
-  if (diffH < 24) return `${diffH}h ago`;
+  if (diffH < 24) return diffH + 'h ago';
   const diffD = Math.floor(diffH / 24);
-  if (diffD < 30) return `${diffD}d ago`;
+  if (diffD < 30) return diffD + 'd ago';
   return d.toLocaleDateString();
 }

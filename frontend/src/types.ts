@@ -1,9 +1,9 @@
 export interface Agent {
   rank: number;
   name: string;
-  country: string; // ISO 3166-1 alpha-2 code
+  country: string;
   totalTokens: number;
-  lastActive: string; // ISO date string
+  lastActive: string;
 }
 
 export interface Stats {

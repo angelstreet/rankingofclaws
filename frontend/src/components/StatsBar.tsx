@@ -1,4 +1,4 @@
-import { Stats } from '../types';
+import type { Stats } from '../types';
 import { formatTokens } from '../utils/format';
 
 interface Props { stats: Stats | null; loading: boolean; }
@@ -14,15 +14,15 @@ export default function StatsBar({ stats, loading }: Props) {
   return (
     <div className="flex flex-wrap justify-center gap-4 sm:gap-8 py-3 text-sm">
       <span className="text-gray-300">
-        <span className="text-yellow-400 font-bold">{stats.totalAgents}</span> agents
+        <span className="font-bold" style={{color:'#FFD700'}}>{stats.totalAgents}</span> agents
       </span>
-      <span className="text-gray-400">·</span>
+      <span className="text-gray-600">·</span>
       <span className="text-gray-300">
-        <span className="text-yellow-400 font-bold">{formatTokens(stats.totalTokens)}</span> total tokens
+        <span className="font-bold" style={{color:'#FFD700'}}>{formatTokens(stats.totalTokens)}</span> total tokens
       </span>
-      <span className="text-gray-400">·</span>
+      <span className="text-gray-600">·</span>
       <span className="text-gray-300">
-        <span className="text-yellow-400 font-bold">{stats.totalCountries}</span> countries
+        <span className="font-bold" style={{color:'#FFD700'}}>{stats.totalCountries}</span> countries
       </span>
     </div>
   );
