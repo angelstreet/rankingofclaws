@@ -3,7 +3,7 @@ import type { Agent, Stats, TimePeriod } from './types';
 import Filters from './components/Filters';
 import Leaderboard from './components/Leaderboard';
 import Providers from './components/Providers';
-import rankingKingsLogo from './assets/rankingkings.png';
+import rankingClawsLogo from './assets/rankingofclaws2.png';
 
 const API_URL = import.meta.env.VITE_API_URL || (window.location.pathname.startsWith('/rankingofclaws') ? '/rankingofclaws/api' : '/api');
 type Page = 'claws' | 'kingdoms';
@@ -157,9 +157,8 @@ export default function App() {
       <header>
         {/* Centered title */}
         <div style={{ textAlign: 'center', padding: '1rem 1rem 0.5rem' }}>
-          <div style={{ margin: '0 0 0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-            <img src={rankingKingsLogo} alt="Ranking of Kings" style={{ height: 'clamp(4rem, 12vw, 8rem)', width: 'auto', filter: 'drop-shadow(0 0 12px rgba(255,215,0,0.4))' }} />
-            <img src={`${import.meta.env.BASE_URL}openclaw.svg`} alt="OpenClaw" style={{ height: 'clamp(2rem, 5vw, 3rem)', width: 'auto', filter: 'drop-shadow(0 0 8px rgba(255,215,0,0.3))' }} />
+          <div style={{ margin: '0 0 0.25rem', display: 'flex', justifyContent: 'center' }}>
+            <img src={rankingClawsLogo} alt="Ranking of Claws" style={{ height: 'clamp(4rem, 12vw, 8rem)', width: 'auto', filter: 'drop-shadow(0 0 12px rgba(255,215,0,0.4))' }} />
           </div>
           <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '1rem', margin: 0 }}>
             "Who burns the most tokens wins the throne"

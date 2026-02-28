@@ -17,39 +17,27 @@ const PERIODS: { value: TimePeriod; label: string }[] = [
 
 export default function Filters({ countries, selectedCountry, onCountryChange, period, onPeriodChange }: Props) {
   return (
-    <div className="flex flex-wrap gap-3 justify-center mb-6">
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
       <select
         value={selectedCountry}
         onChange={e => onCountryChange(e.target.value)}
-        style={{background:'#111118', border:'1px solid #374151', color:'#e5e7eb', borderRadius:'0.5rem', padding:'0.5rem 0.75rem', fontSize:'0.875rem', minHeight:'44px'}}
+        style={{ background: '#111118', border: '1px solid #374151', color: '#e5e7eb', borderRadius: '0.375rem', padding: '0.4rem 0.75rem', fontSize: '0.85rem', minHeight: '36px' }}
       >
-        <option value="">🌐 All countries</option>
+        <option value="">🌍 World</option>
         {countries.map(c => (
           <option key={c} value={c}>{c}</option>
         ))}
       </select>
 
-      <div style={{display:'flex', background:'#111118', border:'1px solid #374151', borderRadius:'0.5rem', overflow:'hidden'}}>
+      <select
+        value={period}
+        onChange={e => onPeriodChange(e.target.value as TimePeriod)}
+        style={{ background: '#111118', border: '1px solid #374151', color: '#e5e7eb', borderRadius: '0.375rem', padding: '0.4rem 0.75rem', fontSize: '0.85rem', minHeight: '36px' }}
+      >
         {PERIODS.map(p => (
-          <button
-            key={p.value}
-            onClick={() => onPeriodChange(p.value)}
-            style={{
-              padding:'0.5rem 0.75rem',
-              fontSize:'0.875rem',
-              minHeight:'44px',
-              border:'none',
-              cursor:'pointer',
-              transition:'all 0.15s',
-              background: period === p.value ? '#FFD700' : 'transparent',
-              color: period === p.value ? '#000' : '#9ca3af',
-              fontWeight: period === p.value ? '700' : '400',
-            }}
-          >
-            {p.label}
-          </button>
+          <option key={p.value} value={p.value}>{p.label}</option>
         ))}
-      </div>
+      </select>
     </div>
   );
 }

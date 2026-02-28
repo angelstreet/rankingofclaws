@@ -38,9 +38,9 @@ export default function Leaderboard({ agents, loading }: Props) {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden sm:block" style={{borderRadius:'1rem', overflow:'hidden', border:'1px solid #1f2937'}}>
+      <div className="hidden sm:block" style={{borderRadius:'0.75rem', overflow:'hidden', border:'1px solid #1f2937'}}>
         <table style={{width:'100%', borderCollapse:'collapse'}}>
-          <thead>
+          <thead style={{position:'sticky', top:0, zIndex:1}}>
             <tr style={{background:'#0d0d14'}}>
               {['Rank','Agent','Country','Tokens','Last Active'].map(h => (
                 <th key={h} style={{padding:'0.75rem 1rem', textAlign: h==='Tokens'||h==='Last Active' ? 'right' : 'left', color:'#6b7280', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'0.08em', fontWeight:600}}>
