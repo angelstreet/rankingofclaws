@@ -5,9 +5,10 @@ import rateLimit from 'express-rate-limit';
 import reportRouter from './routes/report';
 import leaderboardRouter from './routes/leaderboard';
 import statsRouter from './routes/stats';
+import providersRouter from './routes/providers';
 
 const app = express();
-const PORT = process.env.PORT || 3009;
+const PORT = process.env.PORT || 5013;
 
 // Middleware
 app.use(cors());
@@ -24,10 +25,17 @@ const globalLimiter = rateLimit({
 
 app.use(globalLimiter);
 
+// Cache headers — leaderboard data is public, cache 5 min
+app.use('/api', (_req, res, next) => {
+  res.set('Cache-Control', 'public, max-age=300, s-maxage=300');
+  next();
+});
+
 // Routes
 app.use('/api/report', reportRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/providers', providersRouter);
 
 // Health check
 app.get('/health', (_req, res) => {

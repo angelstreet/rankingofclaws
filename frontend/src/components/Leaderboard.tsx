@@ -1,15 +1,20 @@
 import type { Agent } from '../types';
 import { formatTokens, countryToFlag, getRankTitle, getRankColor, formatLastActive } from '../utils/format';
-import AgentCard from './AgentCard';
 
 interface Props { agents: Agent[]; loading: boolean; }
+
+const RANK_EMOJI: Record<number, string> = {
+  1: '\u{1F451}',
+  2: '\u{1F948}',
+  3: '\u{1F949}',
+};
 
 export default function Leaderboard({ agents, loading }: Props) {
   if (loading) {
     return (
-      <div>
+      <div style={{display:'flex', flexDirection:'column', gap:'0.75rem'}}>
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} style={{height:'3.5rem', background:'rgba(30,30,40,0.5)', borderRadius:'0.75rem', marginBottom:'0.5rem'}} />
+          <div key={i} style={{height:'5rem', background:'rgba(30,30,40,0.5)', borderRadius:'0.75rem'}} />
         ))}
       </div>
     );
@@ -19,69 +24,45 @@ export default function Leaderboard({ agents, loading }: Props) {
     return <div style={{textAlign:'center', color:'#6b7280', padding:'4rem 0'}}>No agents found.</div>;
   }
 
-  const TOP3_BG: Record<number, string> = {
-    1: 'rgba(120,90,0,0.2)',
-    2: 'rgba(80,80,80,0.2)',
-    3: 'rgba(100,60,20,0.15)',
-  };
-  const TOP3_BORDER_LEFT: Record<number, string> = {
-    1: '4px solid #FFD700',
-    2: '4px solid #C0C0C0',
-    3: '4px solid #CD7F32',
-  };
+  const maxTokens = agents[0]?.totalTokens || 1;
 
   return (
-    <>
-      {/* Mobile cards */}
-      <div className="sm:hidden">
-        {agents.map(agent => <AgentCard key={agent.rank} agent={agent} />)}
-      </div>
-
-      {/* Desktop table */}
-      <div className="hidden sm:block" style={{borderRadius:'0.75rem', overflow:'hidden', border:'1px solid #1f2937'}}>
-        <table style={{width:'100%', borderCollapse:'collapse'}}>
-          <thead style={{position:'sticky', top:0, zIndex:1}}>
-            <tr style={{background:'#0d0d14'}}>
-              {['Rank','Agent','Country','Tokens','Last Active'].map(h => (
-                <th key={h} style={{padding:'0.75rem 1rem', textAlign: h==='Tokens'||h==='Last Active' ? 'right' : 'left', color:'#6b7280', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'0.08em', fontWeight:600}}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {agents.map(agent => {
-              const { title, icon } = getRankTitle(agent.rank);
-              const rankColor = getRankColor(agent.rank);
-              const bg = TOP3_BG[agent.rank] || 'transparent';
-              const bl = TOP3_BORDER_LEFT[agent.rank] || '4px solid transparent';
-              return (
-                <tr key={agent.rank} style={{background:bg, borderLeft:bl, borderBottom:'1px solid #1f293780', transition:'background 0.15s'}}>
-                  <td style={{padding:'0.75rem 1rem'}}>
-                    <span style={{color:rankColor, fontWeight:900, fontSize:agent.rank<=3?'1.75rem':'1.2rem'}}>
-                      #{agent.rank}
-                    </span>
-                  </td>
-                  <td style={{padding:'0.75rem 1rem'}}>
-                    <div style={{color:'#fff', fontWeight: agent.rank<=3?700:400, fontSize:agent.rank<=3?'1rem':'0.875rem'}}>{agent.name}</div>
-                    <div style={{color:rankColor, fontSize:'0.7rem', marginTop:'0.2rem'}}>{icon} {title}</div>
-                  </td>
-                  <td style={{padding:'0.75rem 1rem'}}>
-                    <span style={{fontSize:'1.25rem'}}>{countryToFlag(agent.country)}</span>
-                    <span style={{color:'#6b7280', fontSize:'0.75rem', marginLeft:'0.25rem'}}>{agent.country}</span>
-                  </td>
-                  <td style={{padding:'0.75rem 1rem', textAlign:'right'}}>
-                    <span style={{color:'#fde047', fontWeight:700, fontSize:'1.1rem'}}>{formatTokens(agent.totalTokens)}</span>
-                  </td>
-                  <td style={{padding:'0.75rem 1rem', textAlign:'right', color:'#6b7280', fontSize:'0.875rem'}}>
-                    {formatLastActive(agent.lastActive)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </>
+    <div style={{display:'flex', flexDirection:'column', gap:'0.75rem'}}>
+      {agents.map(agent => {
+        const pct = ((agent.totalTokens / maxTokens) * 100).toFixed(1);
+        const rankColor = getRankColor(agent.rank);
+        const { title } = getRankTitle(agent.rank);
+        const emoji = RANK_EMOJI[agent.rank] || '';
+        const isTop3 = agent.rank <= 3;
+        const borderColor = isTop3 ? rankColor : '#1f2937';
+        return (
+          <div key={agent.rank} style={{
+            background: '#111118',
+            border: `1px solid ${borderColor}`,
+            borderLeft: `4px solid ${borderColor}`,
+            borderRadius: '0.75rem',
+            padding: '1rem',
+          }}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'0.5rem'}}>
+              <div style={{display:'flex', alignItems:'center', gap:'0.5rem'}}>
+                <span style={{fontWeight:700, color: rankColor, fontSize: isTop3 ? '1.1rem' : '0.9rem'}}>
+                  {emoji} #{agent.rank}
+                </span>
+                <span style={{fontWeight:600, color:'#f3f4f6'}}>{agent.name}</span>
+                <span style={{fontSize:'1.1rem'}}>{countryToFlag(agent.country)}</span>
+              </div>
+              <span style={{fontFamily:'monospace', color:'#FFD700', fontWeight:700, fontSize:'1.1rem'}}>{formatTokens(agent.totalTokens)}</span>
+            </div>
+            <div style={{height:6, background:'#1f2937', borderRadius:3, overflow:'hidden', marginBottom:'0.5rem'}}>
+              <div style={{width:`${pct}%`, height:'100%', background: rankColor, borderRadius:3, transition:'width 0.5s'}} />
+            </div>
+            <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.75rem', color:'#6b7280'}}>
+              <span>{title}</span>
+              <span>{formatLastActive(agent.lastActive)}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }

@@ -42,6 +42,6 @@ export default defineConfig({
   ],
   server: {
     allowedHosts: ['rankingofclaws.angelstreet.io', 'localhost', '65.108.14.251'],
-    port: 5009,
+    port: 3013,
   }
 })

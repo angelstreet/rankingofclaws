@@ -132,9 +132,15 @@ export default function App() {
     style.textContent = `
       .desktop-only { display: block; }
       .mobile-only { display: none; }
+      .mob-hide { display: initial; }
+      .mob-page-tabs { display: flex; }
+      .mob-page-select { display: none; }
       @media (max-width: 768px) {
         .desktop-only { display: none !important; }
         .mobile-only { display: flex !important; }
+        .mob-hide { display: none !important; }
+        .mob-page-tabs { display: none !important; }
+        .mob-page-select { display: block !important; }
       }
     `;
     document.head.appendChild(style);
@@ -167,7 +173,7 @@ export default function App() {
 
         {/* Toolbar: tabs left · filters right */}
         <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: '0.375rem' }}>
+          <div className="mob-page-tabs" style={{ display: 'flex', gap: '0.375rem' }}>
             <button onClick={() => setPage('claws')} style={tabStyle(page === 'claws')}>
               Agents
               <span style={badgeStyle(page === 'claws')}>{stats.totalAgents}</span>
@@ -177,6 +183,15 @@ export default function App() {
               <span style={badgeStyle(page === 'kingdoms')}>{modelCount}</span>
             </button>
           </div>
+          <select
+            className="mob-page-select"
+            value={page}
+            onChange={e => setPage(e.target.value as Page)}
+            style={{ display: 'none', background: '#111118', border: '1px solid #374151', color: '#FFD700', borderRadius: '0.375rem', padding: '0.3rem 0.5rem', fontSize: '0.8rem', fontWeight: 600 }}
+          >
+            <option value="claws">Agents ({stats.totalAgents})</option>
+            <option value="kingdoms">Models ({modelCount})</option>
+          </select>
           <Filters countries={countries} selectedCountry={country} onCountryChange={setCountry} period={period} onPeriodChange={setPeriod} />
         </div>
       </header>
@@ -195,15 +210,15 @@ export default function App() {
       {/* ── Footer ── */}
       <footer style={{ borderTop: '1px solid #1f2937', flexShrink: 0 }}>
         <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0.5rem 1rem', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '0.5rem' }}>
-          <div />
+          <div className="mob-hide" style={{ display: 'initial' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>
+            <span className="mob-hide" style={{ display: 'inline', color: '#6b7280', fontSize: '0.8rem' }}>
               Powered by{' '}
               <a href="https://openclaw.ai" style={{ color: '#FFD700', textDecoration: 'none' }} target="_blank" rel="noreferrer">
                 OpenClaw
               </a>
             </span>
-            <span style={{ color: '#374151', fontSize: '0.8rem' }}>·</span>
+            <span className="mob-hide" style={{ display: 'inline', color: '#374151', fontSize: '0.8rem' }}>·</span>
             <div
               onClick={copyInstall}
               title="Click to copy"
@@ -214,7 +229,7 @@ export default function App() {
               <span id="copy-toast" style={{ color: '#22c55e', opacity: 0, transition: 'opacity 0.3s', fontSize: '0.75rem' }}>copied!</span>
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
+          <div className="mob-hide" style={{ display: 'block', textAlign: 'right' }}>
             <span style={{ fontSize: '0.65rem', color: '#4b5563' }}>
               Inspired by{' '}
               <a href="https://en.wikipedia.org/wiki/Ranking_of_Kings" target="_blank" rel="noopener" style={{ color: '#FFD700', textDecoration: 'none', opacity: 0.4 }}>
