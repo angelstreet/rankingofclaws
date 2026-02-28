@@ -4,8 +4,10 @@ import { MOCK_AGENTS, MOCK_STATS } from './utils/mockData';
 import StatsBar from './components/StatsBar';
 import Filters from './components/Filters';
 import Leaderboard from './components/Leaderboard';
+import Providers from './components/Providers';
 
-const API_URL = import.meta.env.VITE_API_URL || '/rankingofclaws/api';
+const API_URL = import.meta.env.VITE_API_URL || (window.location.origin + (import.meta.env.BASE_URL || "/"));
+type Page = 'claws' | 'kingdoms';
 
 // Backend uses snake_case — map to our camelCase types
 interface ApiAgent {
@@ -57,6 +59,7 @@ async function safeFetch<T>(url: string, fallback: T): Promise<T> {
 }
 
 export default function App() {
+  const [page, setPage] = useState<Page>('claws');
   const [agents, setAgents] = useState<Agent[]>(MOCK_AGENTS);
   const [stats, setStats] = useState<Stats>(MOCK_STATS);
   const [loading, setLoading] = useState(false);
@@ -92,6 +95,21 @@ export default function App() {
   const countries = useMemo(() => Array.from(new Set(agents.map(a => a.country).filter(Boolean))).sort(), [agents]);
   const filtered = useMemo(() => country ? agents.filter(a => a.country === country) : agents, [agents, country]);
 
+  // Inject responsive styles
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .desktop-only { display: block; }
+      .mobile-only { display: none; }
+      @media (max-width: 768px) {
+        .desktop-only { display: none !important; }
+        .mobile-only { display: flex !important; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
+
   return (
     <div style={{minHeight:'100vh', background:'#0a0a0f', fontFamily:'Inter, system-ui, sans-serif', color:'#fff'}}>
       <header style={{textAlign:'center', padding:'1rem 1rem 0.5rem'}}>
@@ -103,12 +121,40 @@ export default function App() {
         <p style={{color:'#9ca3af', fontStyle:'italic', fontSize:'1rem', margin:'0 0 0.75rem'}}>
           "Who burns the most tokens wins the throne"
         </p>
+        <div style={{display:'flex', justifyContent:'center', gap:'0.5rem', margin:'0.75rem 0'}}>
+          <button
+            onClick={() => setPage('claws')}
+            style={{
+              padding:'0.5rem 1.25rem', borderRadius:'2rem', border:'1px solid',
+              borderColor: page === 'claws' ? '#FFD700' : '#374151',
+              background: page === 'claws' ? '#FFD70015' : 'transparent',
+              color: page === 'claws' ? '#FFD700' : '#9ca3af',
+              cursor:'pointer', fontWeight:600, fontSize:'0.875rem', transition:'all 0.2s'
+            }}>
+            Agents
+          </button>
+          <button
+            onClick={() => setPage('kingdoms')}
+            style={{
+              padding:'0.5rem 1.25rem', borderRadius:'2rem', border:'1px solid',
+              borderColor: page === 'kingdoms' ? '#FFD700' : '#374151',
+              background: page === 'kingdoms' ? '#FFD70015' : 'transparent',
+              color: page === 'kingdoms' ? '#FFD700' : '#9ca3af',
+              cursor:'pointer', fontWeight:600, fontSize:'0.875rem', transition:'all 0.2s'
+            }}>
+            Providers
+          </button>
+        </div>
         <div style={{borderTop:'1px solid #1f2937', paddingTop:'0.75rem'}}>
           <StatsBar stats={stats} loading={loading} />
         </div>
       </header>
 
       <main style={{maxWidth:'56rem', margin:'0 auto', padding:'1rem 1rem 1.5rem'}}>
+        {page === 'kingdoms' ? (
+          <Providers apiUrl={API_URL} />
+        ) : (
+          <>
         <Filters
           countries={countries}
           selectedCountry={country}
@@ -117,6 +163,8 @@ export default function App() {
           onPeriodChange={setPeriod}
         />
         <Leaderboard agents={filtered} loading={loading} />
+          </>
+        )}
       </main>
 
       <footer style={{textAlign:'center', padding:'1.5rem 1rem', borderTop:'1px solid #1f2937', color:'#9ca3af', fontSize:'1rem'}}>
