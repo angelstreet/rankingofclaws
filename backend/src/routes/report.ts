@@ -29,6 +29,11 @@ router.post('/', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'tokens_delta must be a non-negative number' });
   }
 
+  // Reject synthetic test gateway IDs to keep leaderboard clean.
+  if (typeof gateway_id === 'string' && gateway_id.toLowerCase().startsWith('test-')) {
+    return res.status(400).json({ error: 'test gateway_id values are not allowed' });
+  }
+
   // Rate limit check by gateway_id
   const now = Date.now();
   const lastReported = rateLimitStore.get(gateway_id);
