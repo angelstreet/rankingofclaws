@@ -28,6 +28,7 @@ const RANK_EMOJI: Record<number, string> = {
 export default function Providers({ apiUrl, country, period, onLoad }: { apiUrl: string; country?: string; period?: string; onLoad?: (count: number) => void }) {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
+  void period;
 
   useEffect(() => {
     fetch(`${apiUrl}/providers${country ? `?country=${country}` : ''}`)

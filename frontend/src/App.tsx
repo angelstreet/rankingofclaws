@@ -2,11 +2,9 @@ import { useEffect, useState, useMemo } from 'react';
 import type { Agent, Stats, TimePeriod } from './types';
 import Filters from './components/Filters';
 import Leaderboard from './components/Leaderboard';
-import Providers from './components/Providers';
 import rankingClawsLogo from './assets/rankingofclaws2.png';
 
 const API_URL = import.meta.env.VITE_API_URL || (window.location.pathname.startsWith('/rankingofclaws') ? '/rankingofclaws/api' : '/api');
-type Page = 'claws' | 'kingdoms';
 
 interface ApiAgent {
   rank: number;
@@ -44,7 +42,8 @@ function mapStats(s: ApiStats): Stats {
 }
 
 const fetchCache = new Map<string, { data: unknown; ts: number }>();
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 30 * 1000;
+const REFRESH_INTERVAL_MS = 30 * 1000;
 
 async function safeFetch<T>(url: string, fallback: T): Promise<T> {
   const cached = fetchCache.get(url);
@@ -94,11 +93,9 @@ function badgeStyle(active: boolean): React.CSSProperties {
 }
 
 export default function App() {
-  const [page, setPage] = useState<Page>('claws');
   const [agents, setAgents] = useState<Agent[]>([]);
   const [stats, setStats] = useState<Stats>({ totalAgents: 0, totalTokens: 0, totalCountries: 0 });
-  const [modelCount, setModelCount] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [country, setCountry] = useState('');
   const [period, setPeriod] = useState<TimePeriod>('all');
   const [search, setSearch] = useState('');
@@ -134,7 +131,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    void (async () => {
+    const loadData = async () => {
       setLoading(true);
       const [lbData, statsData] = await Promise.all([
         safeFetch<ApiLeaderboard | null>(`${API_URL}/leaderboard?limit=200`, null),
@@ -148,14 +145,22 @@ export default function App() {
           s.totalCountries = new Set(mapped.map(a => a.country)).size;
           setStats(s);
         } else {
-          setStats({ totalAgents: mapped.length, totalCountries: new Set(mapped.map(a => a.country)).size });
+          setStats({
+            totalAgents: mapped.length,
+            totalTokens: mapped.reduce((sum, a) => sum + a.totalTokens, 0),
+            totalCountries: new Set(mapped.map(a => a.country)).size,
+          });
         }
       } else {
         setAgents([]);
         setStats({ totalAgents: 0, totalTokens: 0, totalCountries: 0 });
       }
       setLoading(false);
-    })();
+    };
+
+    void loadData();
+    const timer = setInterval(() => { void loadData(); }, REFRESH_INTERVAL_MS);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -198,62 +203,55 @@ export default function App() {
             <img src={rankingClawsLogo} alt="Ranking of Claws" style={{ height: 'clamp(4rem, 12vw, 8rem)', width: 'auto', filter: 'drop-shadow(0 0 12px rgba(255,215,0,0.4))' }} />
           </div>
           <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '1rem', margin: 0 }}>
-            "Who burns the most tokens wins the throne"
+            "Who <span style={{color:'#E8272C'}}>burns</span> the most tokens wins the throne"
           </p>
         </div>
 
         {/* Toolbar: tabs left · filters right */}
         <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div className="mob-page-tabs" style={{ display: 'flex', gap: '0.375rem' }}>
-            <button onClick={() => setPage('claws')} style={tabStyle(page === 'claws')}>
+            <button style={tabStyle(true)}>
               Agents
-              <span style={badgeStyle(page === 'claws')}>{stats.totalAgents}</span>
-            </button>
-            <button onClick={() => setPage('kingdoms')} style={tabStyle(page === 'kingdoms')}>
-              Models
-              <span style={badgeStyle(page === 'kingdoms')}>{modelCount}</span>
+              <span style={badgeStyle(true)}>{stats.totalAgents}</span>
             </button>
           </div>
           <select
             className="mob-page-select"
-            value={page}
-            onChange={e => setPage(e.target.value as Page)}
+            value="claws"
+            onChange={() => {}}
             style={{ display: 'none', background: '#111118', border: '1px solid #374151', color: '#FFD700', borderRadius: '0.375rem', padding: '0.4rem 0.75rem', fontSize: '0.85rem', fontWeight: 600, minHeight: '36px' }}
           >
             <option value="claws">Agents ({stats.totalAgents})</option>
-            <option value="kingdoms">Models ({modelCount})</option>
           </select>
-          {page === 'claws' && (
-            <div className="mob-hide" style={{ display: 'flex', flex: 1, gap: '0.375rem', minWidth: 0, alignItems: 'center' }}>
-              {myAgent ? (
-                <>
-                  <span style={{ color: '#FFD700', fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                    #{myAgent.rank} {myAgent.agent}
-                  </span>
-                  <span style={{ color: '#6b7280', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
-                    Top {(100 - myAgent.percentile).toFixed(0)}%
-                  </span>
-                  <button onClick={clearMyAgent} style={{ background: 'transparent', border: '1px solid #374151', color: '#6b7280', borderRadius: '0.375rem', padding: '0.15rem 0.4rem', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1 }}>
-                    ×
-                  </button>
-                </>
-              ) : (
-                <>
-                  <input
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && fetchRank(search)}
-                    placeholder="Find your agent..."
-                    style={{ flex: 1, background: '#111118', border: '1px solid #374151', borderRadius: '0.375rem', padding: '0.3rem 0.625rem', color: '#f3f4f6', fontSize: '0.8rem', outline: 'none' }}
-                  />
-                  <button onClick={() => fetchRank(search)} disabled={searchLoading} style={{ background: '#FFD70020', border: '1px solid #FFD70050', color: '#FFD700', borderRadius: '0.375rem', padding: '0.3rem 0.625rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                    {searchLoading ? '...' : 'Find'}
-                  </button>
-                </>
-              )}
-              {searchError && <span style={{ color: '#ef4444', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>{searchError}</span>}
-            </div>
-          )}
+          <div className="mob-hide" style={{ display: 'flex', flex: 1, gap: '0.375rem', minWidth: 0, alignItems: 'center' }}>
+            {myAgent ? (
+              <>
+                <span style={{ color: '#FFD700', fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                  #{myAgent.rank} {myAgent.agent}
+                </span>
+                <span style={{ color: '#6b7280', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                  Top {(100 - myAgent.percentile).toFixed(0)}%
+                </span>
+                <button onClick={clearMyAgent} style={{ background: 'transparent', border: '1px solid #374151', color: '#6b7280', borderRadius: '0.375rem', padding: '0.15rem 0.4rem', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1 }}>
+                  ×
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && fetchRank(search)}
+                  placeholder="Find your agent..."
+                  style={{ flex: 1, background: '#111118', border: '1px solid #374151', borderRadius: '0.375rem', padding: '0.3rem 0.625rem', color: '#f3f4f6', fontSize: '0.8rem', outline: 'none' }}
+                />
+                <button onClick={() => fetchRank(search)} disabled={searchLoading} style={{ background: '#FFD70020', border: '1px solid #FFD70050', color: '#FFD700', borderRadius: '0.375rem', padding: '0.3rem 0.625rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                  {searchLoading ? '...' : 'Find'}
+                </button>
+              </>
+            )}
+            {searchError && <span style={{ color: '#ef4444', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>{searchError}</span>}
+          </div>
           <Filters countries={countries} selectedCountry={country} onCountryChange={setCountry} period={period} onPeriodChange={setPeriod} />
         </div>
       </header>
@@ -261,11 +259,7 @@ export default function App() {
       {/* ── Scrollable content area ── */}
       <main style={{ flex: 1, overflow: 'hidden', maxWidth: '56rem', width: '100%', margin: '0 auto', padding: '0.5rem 1rem 0', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflowY: 'auto', borderRadius: '0.75rem' }}>
-          {page === 'kingdoms' ? (
-            <Providers apiUrl={API_URL} country={country} period={period} onLoad={setModelCount} />
-          ) : (
-            <Leaderboard agents={filtered} loading={loading} myAgentName={myAgent?.agent} />
-          )}
+          <Leaderboard agents={filtered} loading={loading} myAgentName={myAgent?.agent} />
         </div>
       </main>
 
@@ -294,7 +288,7 @@ export default function App() {
           <div className="mob-hide" style={{ display: 'block', textAlign: 'right' }}>
             <span style={{ fontSize: '0.65rem', color: '#4b5563' }}>
               Inspired by{' '}
-              <a href="https://en.wikipedia.org/wiki/Ranking_of_Kings" target="_blank" rel="noopener" style={{ color: '#FFD700', textDecoration: 'none', opacity: 0.4 }}>
+              <a href="https://en.wikipedia.org/wiki/Ranking_of_Kings" target="_blank" rel="noopener" style={{ color: '#FFD700', textDecoration: 'none', opacity: 0.85 }}>
                 Ranking of Kings
               </a>
             </span>

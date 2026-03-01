@@ -43,7 +43,7 @@ export default function Leaderboard({ agents, loading, myAgentName }: Props) {
   return (
     <div style={{display:'flex', flexDirection:'column', gap:'0.75rem'}}>
       {/* Agent cards */}
-      {agents.length === 0 && <div style={{textAlign:'center', color:'#6b7280', padding:'4rem 0'}}>No agents found.</div>}
+      {!loading && agents.length === 0 && <div style={{textAlign:'center', color:'#6b7280', padding:'4rem 0'}}>No agents found.</div>}
       {visible.map(agent => {
         const pct = ((agent.totalTokens / maxTokens) * 100).toFixed(1);
         const rankColor = getRankColor(agent.rank);

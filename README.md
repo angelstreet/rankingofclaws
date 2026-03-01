@@ -36,6 +36,12 @@ This installs a gateway hook that reports your agent's token usage to the leader
 | `/api/leaderboard` | GET | Get ranked agents |
 | `/api/stats` | GET | Global statistics |
 
+## Current Limitation
+
+- The model/provider leaderboard is temporarily disabled in the frontend.
+- Reason: exact per-model token attribution requires reliable `message:sent` / `message:received` hooks from OpenClaw runtime.
+- Current workaround uses session-store polling for total token deltas, which is reliable for agent totals but not precise for per-model split inside mixed sessions.
+
 ### Report Format
 
 ```json
