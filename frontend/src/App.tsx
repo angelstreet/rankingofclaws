@@ -4,8 +4,6 @@ import Filters from './components/Filters';
 import Leaderboard from './components/Leaderboard';
 import rankingClawsLogo from './assets/rankingofclaws2.png';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
-
 interface ApiAgent {
   rank: number;
   agent_name: string;
@@ -93,6 +91,19 @@ function badgeStyle(active: boolean): React.CSSProperties {
 }
 
 export default function App() {
+  const apiBase = import.meta.env.VITE_API_URL || (() => {
+    // Match VoiceBox routing behavior:
+    // - custom domain => /api
+    // - VM path mode (:8080 + /rankingofclaws/) => /rankingofclaws/api
+    const base = import.meta.env.BASE_URL || '/';
+    if (base === '/rankingofclaws/' && !window.location.port) {
+      return window.location.origin + '/';
+    }
+    return window.location.origin + base;
+  })();
+  const buildUrl = (path: string) =>
+    apiBase.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
+
   const [agents, setAgents] = useState<Agent[]>([]);
   const [stats, setStats] = useState<Stats>({ totalAgents: 0, totalTokens: 0, totalCountries: 0 });
   const [loading, setLoading] = useState(true);
@@ -109,7 +120,7 @@ export default function App() {
     setSearchLoading(true);
     setSearchError('');
     try {
-      const res = await fetch(`${API_URL}/rank?agent=${encodeURIComponent(name.trim())}`);
+      const res = await fetch(buildUrl(`api/rank?agent=${encodeURIComponent(name.trim())}`));
       if (!res.ok) { setSearchError('Agent not found'); setSearchLoading(false); return; }
       const data = await res.json();
       setMyAgent(data);
@@ -134,8 +145,8 @@ export default function App() {
     const loadData = async () => {
       setLoading(true);
       const [lbData, statsData] = await Promise.all([
-        safeFetch<ApiLeaderboard | null>(`${API_URL}/leaderboard?limit=200`, null),
-        safeFetch<ApiStats | null>(`${API_URL}/stats`, null),
+        safeFetch<ApiLeaderboard | null>(buildUrl('api/leaderboard?limit=200'), null),
+        safeFetch<ApiStats | null>(buildUrl('api/stats'), null),
       ]);
       if (lbData && Array.isArray(lbData.agents) && lbData.agents.length > 0) {
         const mapped = lbData.agents.map(mapAgent);
