@@ -5,7 +5,7 @@ const router = Router();
 
 // In-memory rate limit store: gateway_id -> last reported timestamp
 const rateLimitStore = new Map<string, number>();
-const RATE_LIMIT_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MS = 60 * 1000; // 1 hour
 
 router.post('/', (req: Request, res: Response) => {
   const {
@@ -35,7 +35,7 @@ router.post('/', (req: Request, res: Response) => {
   if (lastReported && now - lastReported < RATE_LIMIT_MS) {
     const retryAfterSec = Math.ceil((RATE_LIMIT_MS - (now - lastReported)) / 1000);
     return res.status(429).json({
-      error: 'Rate limit exceeded. Max 1 report per gateway per hour.',
+      error: 'Rate limit exceeded. Max 1 report per gateway per minute.',
       retry_after_seconds: retryAfterSec,
     });
   }

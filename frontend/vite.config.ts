@@ -17,7 +17,7 @@ export default defineConfig({
         name: 'Ranking of Claws',
         short_name: 'RankOfClaws',
         description: 'Who burns the most tokens wins the throne',
-        theme_color: '#FFD700',
+        theme_color: '#0a0a0f',
         background_color: '#0a0a0f',
         display: 'standalone',
         orientation: 'portrait',

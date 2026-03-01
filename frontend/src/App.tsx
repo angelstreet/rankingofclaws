@@ -101,12 +101,43 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState('');
   const [period, setPeriod] = useState<TimePeriod>('all');
+  const [search, setSearch] = useState('');
+  const [myAgent, setMyAgent] = useState<{ agent: string; rank: number; total: number; percentile: number } | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
+
+  const LS_KEY = 'rok_my_agent';
+
+  async function fetchRank(name: string) {
+    setSearchLoading(true);
+    setSearchError('');
+    try {
+      const res = await fetch(`${API_URL}/rank?agent=${encodeURIComponent(name.trim())}`);
+      if (!res.ok) { setSearchError('Agent not found'); setSearchLoading(false); return; }
+      const data = await res.json();
+      setMyAgent(data);
+      localStorage.setItem(LS_KEY, data.agent);
+      setSearch('');
+    } catch { setSearchError('Search failed'); }
+    setSearchLoading(false);
+  }
+
+  function clearMyAgent() {
+    setMyAgent(null);
+    localStorage.removeItem(LS_KEY);
+  }
+
+  // Restore saved agent on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('rok_my_agent');
+    if (saved) fetchRank(saved);
+  }, []);
 
   useEffect(() => {
     void (async () => {
       setLoading(true);
       const [lbData, statsData] = await Promise.all([
-        safeFetch<ApiLeaderboard | null>(`${API_URL}/leaderboard?limit=50`, null),
+        safeFetch<ApiLeaderboard | null>(`${API_URL}/leaderboard?limit=200`, null),
         safeFetch<ApiStats | null>(`${API_URL}/stats`, null),
       ]);
       if (lbData && Array.isArray(lbData.agents) && lbData.agents.length > 0) {
@@ -172,7 +203,7 @@ export default function App() {
         </div>
 
         {/* Toolbar: tabs left · filters right */}
-        <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div className="mob-page-tabs" style={{ display: 'flex', gap: '0.375rem' }}>
             <button onClick={() => setPage('claws')} style={tabStyle(page === 'claws')}>
               Agents
@@ -187,11 +218,42 @@ export default function App() {
             className="mob-page-select"
             value={page}
             onChange={e => setPage(e.target.value as Page)}
-            style={{ display: 'none', background: '#111118', border: '1px solid #374151', color: '#FFD700', borderRadius: '0.375rem', padding: '0.3rem 0.5rem', fontSize: '0.8rem', fontWeight: 600 }}
+            style={{ display: 'none', background: '#111118', border: '1px solid #374151', color: '#FFD700', borderRadius: '0.375rem', padding: '0.4rem 0.75rem', fontSize: '0.85rem', fontWeight: 600, minHeight: '36px' }}
           >
             <option value="claws">Agents ({stats.totalAgents})</option>
             <option value="kingdoms">Models ({modelCount})</option>
           </select>
+          {page === 'claws' && (
+            <div className="mob-hide" style={{ display: 'flex', flex: 1, gap: '0.375rem', minWidth: 0, alignItems: 'center' }}>
+              {myAgent ? (
+                <>
+                  <span style={{ color: '#FFD700', fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                    #{myAgent.rank} {myAgent.agent}
+                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                    Top {(100 - myAgent.percentile).toFixed(0)}%
+                  </span>
+                  <button onClick={clearMyAgent} style={{ background: 'transparent', border: '1px solid #374151', color: '#6b7280', borderRadius: '0.375rem', padding: '0.15rem 0.4rem', cursor: 'pointer', fontSize: '0.8rem', lineHeight: 1 }}>
+                    ×
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && fetchRank(search)}
+                    placeholder="Find your agent..."
+                    style={{ flex: 1, background: '#111118', border: '1px solid #374151', borderRadius: '0.375rem', padding: '0.3rem 0.625rem', color: '#f3f4f6', fontSize: '0.8rem', outline: 'none' }}
+                  />
+                  <button onClick={() => fetchRank(search)} disabled={searchLoading} style={{ background: '#FFD70020', border: '1px solid #FFD70050', color: '#FFD700', borderRadius: '0.375rem', padding: '0.3rem 0.625rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                    {searchLoading ? '...' : 'Find'}
+                  </button>
+                </>
+              )}
+              {searchError && <span style={{ color: '#ef4444', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>{searchError}</span>}
+            </div>
+          )}
           <Filters countries={countries} selectedCountry={country} onCountryChange={setCountry} period={period} onPeriodChange={setPeriod} />
         </div>
       </header>
@@ -202,7 +264,7 @@ export default function App() {
           {page === 'kingdoms' ? (
             <Providers apiUrl={API_URL} country={country} period={period} onLoad={setModelCount} />
           ) : (
-            <Leaderboard agents={filtered} loading={loading} />
+            <Leaderboard agents={filtered} loading={loading} myAgentName={myAgent?.agent} />
           )}
         </div>
       </main>

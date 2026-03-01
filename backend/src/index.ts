@@ -6,6 +6,7 @@ import reportRouter from './routes/report';
 import leaderboardRouter from './routes/leaderboard';
 import statsRouter from './routes/stats';
 import providersRouter from './routes/providers';
+import rankRouter from './routes/rank';
 
 const app = express();
 const PORT = process.env.PORT || 5013;
@@ -36,6 +37,7 @@ app.use('/api/report', reportRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/providers', providersRouter);
+app.use('/api/rank', rankRouter);
 
 // Health check
 app.get('/health', (_req, res) => {
