@@ -4,7 +4,7 @@ import Filters from './components/Filters';
 import Leaderboard from './components/Leaderboard';
 import rankingClawsLogo from './assets/rankingofclaws2.png';
 
-const API_URL = import.meta.env.VITE_API_URL || (window.location.pathname.startsWith('/rankingofclaws') ? '/rankingofclaws/api' : '/api');
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface ApiAgent {
   rank: number;
