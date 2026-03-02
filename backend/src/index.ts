@@ -9,6 +9,7 @@ import providersRouter from './routes/providers';
 import rankRouter from './routes/rank';
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5013;
 
 // Middleware

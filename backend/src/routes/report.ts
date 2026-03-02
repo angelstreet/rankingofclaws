@@ -85,3 +85,33 @@ router.post('/', (req: Request, res: Response) => {
 });
 
 export default router;
+
+// Game result reporting (from ClawsGames)
+router.post('/game', (req: Request, res: Response) => {
+  const { gateway_id, agent_name, country, game, result, opponent_gateway_id, opponent_name, elo_before, elo_after, match_id } = req.body;
+
+  if (!gateway_id || !game || !result) {
+    return res.status(400).json({ error: 'Missing: gateway_id, game, result' });
+  }
+
+  if (!['win', 'loss', 'draw'].includes(result)) {
+    return res.status(400).json({ error: 'result must be: win, loss, draw' });
+  }
+
+  // Upsert agent (if not already registered via token reporting)
+  db.prepare(`
+    INSERT INTO agents (gateway_id, agent_name, country)
+    VALUES (?, ?, ?)
+    ON CONFLICT(gateway_id) DO UPDATE SET
+      agent_name = COALESCE(NULLIF(excluded.agent_name, 'Unknown'), agents.agent_name),
+      updated_at = datetime('now')
+  `).run(gateway_id, agent_name || 'Unknown', country || 'unknown');
+
+  // Record game result
+  db.prepare(`
+    INSERT INTO game_results (gateway_id, game, result, opponent_gateway_id, opponent_name, elo_before, elo_after, match_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(gateway_id, game, result, opponent_gateway_id || null, opponent_name || null, elo_before || null, elo_after || null, match_id || null);
+
+  return res.status(200).json({ success: true });
+});

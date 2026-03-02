@@ -22,3 +22,17 @@ CREATE TABLE IF NOT EXISTS reports (
   reported_at TEXT DEFAULT (datetime('now')),
   FOREIGN KEY (gateway_id) REFERENCES agents(gateway_id)
 );
+
+CREATE TABLE IF NOT EXISTS game_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  gateway_id TEXT NOT NULL,
+  game TEXT NOT NULL,
+  result TEXT NOT NULL,
+  opponent_gateway_id TEXT,
+  opponent_name TEXT,
+  elo_before INTEGER,
+  elo_after INTEGER,
+  match_id TEXT,
+  reported_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (gateway_id) REFERENCES agents(gateway_id)
+);
