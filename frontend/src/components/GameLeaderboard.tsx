@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import PlayerHistoryModal from './PlayerHistoryModal';
 
 interface GameAgent {
   rank: number;
+  gateway_id: string;
   agent_name: string;
   country: string;
   wins: number;
@@ -46,6 +48,7 @@ export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter }: Pr
   const [stats, setStats] = useState<GameStats | null>(null);
   
   const [loading, setLoading] = useState(true);
+  const [selectedAgent, setSelectedAgent] = useState<GameAgent | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -60,6 +63,7 @@ export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter }: Pr
   }, [gameFilter, modeFilter]);
 
   return (
+    <>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
 
       {/* Leaderboard */}
@@ -73,11 +77,12 @@ export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter }: Pr
         agents.map((a) => (
           <div
             key={a.gateway_id}
+            onClick={() => setSelectedAgent(a)}
             style={{
               display: 'flex', alignItems: 'center', gap: '0.75rem',
               background: a.rank === 1 ? '#FFD70008' : '#111118',
               border: `1px solid ${a.rank === 1 ? '#FFD70030' : '#1f2937'}`,
-              borderRadius: '0.5rem', padding: '0.6rem 0.75rem',
+              borderRadius: '0.5rem', padding: '0.6rem 0.75rem', cursor: 'pointer',
             }}
           >
             <span style={{ width: '2rem', textAlign: 'center', fontWeight: 800, fontSize: '0.9rem', color: a.rank <= 3 ? '#FFD700' : '#6b7280' }}>
@@ -104,5 +109,15 @@ export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter }: Pr
         ))
       )}
     </div>
+
+      {selectedAgent && (
+        <PlayerHistoryModal
+          gatewayId={selectedAgent.gateway_id}
+          agentName={selectedAgent.agent_name}
+          buildUrl={buildUrl}
+          onClose={() => setSelectedAgent(null)}
+        />
+      )}
+    </>
   );
 }

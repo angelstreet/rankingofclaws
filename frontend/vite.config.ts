@@ -43,5 +43,11 @@ export default defineConfig({
   server: {
     allowedHosts: ['rankingofclaws.angelstreet.io', 'localhost', '65.108.14.251'],
     port: 3013,
+    proxy: {
+      '/rankingofclaws/api': {
+        target: 'http://localhost:5013',
+        rewrite: (path: string) => path.replace('/rankingofclaws/api', '/api'),
+      }
+    }
   }
 })

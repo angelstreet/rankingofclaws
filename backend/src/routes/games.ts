@@ -80,4 +80,65 @@ router.get('/stats', (_req: Request, res: Response) => {
   });
 });
 
+
+// Player history
+router.get('/player/:gatewayId/history', (req: Request, res: Response) => {
+  const { gatewayId } = req.params;
+  const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+
+  const matches = db.prepare(`
+    SELECT id, game, result, opponent_gateway_id, opponent_name,
+           elo_before, elo_after, match_id, reported_at
+    FROM game_results
+    WHERE gateway_id = ?
+    ORDER BY reported_at DESC
+    LIMIT ?
+  `).all(gatewayId, limit) as any[];
+
+  const statsRow = db.prepare(`
+    SELECT
+      SUM(CASE WHEN result = 'win' THEN 1 ELSE 0 END) as wins,
+      SUM(CASE WHEN result = 'loss' THEN 1 ELSE 0 END) as losses,
+      SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
+      COUNT(*) as total,
+      MAX(elo_after) as peak_elo
+    FROM game_results WHERE gateway_id = ?
+  `).get(gatewayId) as any;
+
+  const agent = db.prepare('SELECT agent_name, country FROM agents WHERE gateway_id = ?').get(gatewayId) as any;
+
+  return res.json({
+    gateway_id: gatewayId,
+    agent_name: agent?.agent_name || 'Unknown',
+    stats: {
+      wins: statsRow.wins || 0,
+      losses: statsRow.losses || 0,
+      draws: statsRow.draws || 0,
+      total: statsRow.total || 0,
+      peak_elo: statsRow.peak_elo || 1200,
+      win_rate: statsRow.total ? ((statsRow.wins / statsRow.total) * 100).toFixed(1) : '0.0',
+    },
+    matches,
+  });
+});
+
+// Match detail / replay
+router.get('/match/:matchId', (req: Request, res: Response) => {
+  const { matchId } = req.params;
+
+  const rows = db.prepare(`
+    SELECT gr.id, gr.gateway_id, gr.game, gr.result, gr.opponent_gateway_id,
+           gr.opponent_name, gr.elo_before, gr.elo_after, gr.match_id, gr.reported_at,
+           a.agent_name
+    FROM game_results gr
+    LEFT JOIN agents a ON a.gateway_id = gr.gateway_id
+    WHERE gr.match_id = ?
+    ORDER BY gr.id ASC
+  `).all(matchId) as any[];
+
+  if (!rows.length) return res.status(404).json({ error: 'Match not found' });
+
+  return res.json({ match_id: matchId, participants: rows });
+});
+
 export default router;
