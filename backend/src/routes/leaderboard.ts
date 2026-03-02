@@ -15,11 +15,12 @@ router.get('/', (req: Request, res: Response) => {
       tokens_total, tokens_in, tokens_out, sessions_total,
       last_reported_at, created_at
     FROM agents
+    WHERE gateway_id NOT LIKE 'ai-%' AND tokens_total > 0
   `;
   const params: (string | number)[] = [];
 
   if (country) {
-    query += ' WHERE country = ?';
+    query += ' AND country = ?';
     params.push(country.toUpperCase());
   }
 
@@ -29,10 +30,10 @@ router.get('/', (req: Request, res: Response) => {
   const agents = db.prepare(query).all(...params);
 
   // Total count for pagination
-  let countQuery = 'SELECT COUNT(*) as total FROM agents';
+  let countQuery = "SELECT COUNT(*) as total FROM agents WHERE gateway_id NOT LIKE 'ai-%' AND tokens_total > 0";
   const countParams: string[] = [];
   if (country) {
-    countQuery += ' WHERE country = ?';
+    countQuery += ' AND country = ?';
     countParams.push(country.toUpperCase());
   }
   const { total } = db.prepare(countQuery).get(...countParams) as { total: number };

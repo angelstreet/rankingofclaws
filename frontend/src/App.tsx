@@ -108,7 +108,7 @@ export default function App() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [stats, setStats] = useState<Stats>({ totalAgents: 0, totalTokens: 0, totalCountries: 0 });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'agents'|'games'>('agents');
+  const [activeTab, setActiveTab] = useState<'tokens'|'tictactoe'|'chess'>('tokens');
   const [country, setCountry] = useState('');
   const [period, setPeriod] = useState<TimePeriod>('all');
   const [search, setSearch] = useState('');
@@ -223,12 +223,15 @@ export default function App() {
         {/* Toolbar: tabs left · filters right */}
         <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div className="mob-page-tabs" style={{ display: 'flex', gap: '0.375rem' }}>
-            <button onClick={() => setActiveTab('agents')} style={tabStyle(activeTab === 'agents')}>
-              Agents
-              <span style={badgeStyle(activeTab === 'agents')}>{stats.totalAgents}</span>
+            <button onClick={() => setActiveTab('tokens')} style={tabStyle(activeTab === 'tokens')}>
+              Tokens
+              <span style={badgeStyle(activeTab === 'tokens')}>{stats.totalAgents}</span>
             </button>
-            <button onClick={() => setActiveTab('games')} style={tabStyle(activeTab === 'games')}>
-              Games
+            <button onClick={() => setActiveTab('tictactoe')} style={tabStyle(activeTab === 'tictactoe')}>
+              Tic-Tac-Toe
+            </button>
+            <button onClick={() => setActiveTab('chess')} style={tabStyle(activeTab === 'chess')}>
+              Chess
             </button>
           </div>
           <select
@@ -237,8 +240,9 @@ export default function App() {
             onChange={e => setActiveTab(e.target.value as any)}
             style={{ display: 'none', background: '#111118', border: '1px solid #374151', color: '#FFD700', borderRadius: '0.375rem', padding: '0.4rem 0.75rem', fontSize: '0.85rem', fontWeight: 600, minHeight: '36px' }}
           >
-            <option value="agents">Agents ({stats.totalAgents})</option>
-            <option value="games">Games</option>
+            <option value="tokens">Tokens ({stats.totalAgents})</option>
+            <option value="tictactoe">Tic-Tac-Toe</option>
+            <option value="chess">Chess</option>
           </select>
           <div className="mob-hide" style={{ display: 'flex', flex: 1, gap: '0.375rem', minWidth: 0, alignItems: 'center' }}>
             {myAgent ? (
@@ -276,10 +280,10 @@ export default function App() {
       {/* ── Scrollable content area ── */}
       <main style={{ flex: 1, overflow: 'hidden', maxWidth: '56rem', width: '100%', margin: '0 auto', padding: '0.5rem 1rem 0', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflowY: 'auto', borderRadius: '0.75rem' }}>
-          {activeTab === 'agents' ? (
+          {activeTab === 'tokens' ? (
             <Leaderboard agents={filtered} loading={loading} myAgentName={myAgent?.agent} />
           ) : (
-            <GameLeaderboard apiBase={apiBase} buildUrl={buildUrl} />
+            <GameLeaderboard apiBase={apiBase} buildUrl={buildUrl} gameFilter={activeTab} />
           )}
         </div>
       </main>

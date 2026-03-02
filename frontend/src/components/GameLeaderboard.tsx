@@ -21,6 +21,7 @@ interface GameStats {
 interface Props {
   apiBase: string;
   buildUrl: (path: string) => string;
+  gameFilter: string;
 }
 
 const GAME_LABELS: Record<string, string> = {
@@ -45,44 +46,32 @@ function timeAgo(ts: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export default function GameLeaderboard({ buildUrl }: Props) {
+export default function GameLeaderboard({ buildUrl, gameFilter }: Props) {
   const [agents, setAgents] = useState<GameAgent[]>([]);
   const [stats, setStats] = useState<GameStats | null>(null);
-  const [game, setGame] = useState('all');
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch(buildUrl(`api/games/leaderboard?game=${game}`)).then(r => r.json()).catch(() => ({ agents: [] })),
+      fetch(buildUrl(`api/games/leaderboard?game=${gameFilter}`)).then(r => r.json()).catch(() => ({ agents: [] })),
       fetch(buildUrl('api/games/stats')).then(r => r.json()).catch(() => null),
     ]).then(([lb, st]) => {
       setAgents(lb.agents || []);
       if (st) setStats(st);
       setLoading(false);
     });
-  }, [game]);
+  }, [gameFilter]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      {/* Game filter */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
-        <select
-          value={game}
-          onChange={e => setGame(e.target.value)}
-          style={{ background: '#111118', border: '1px solid #374151', color: '#FFD700', borderRadius: '0.375rem', padding: '0.35rem 0.75rem', fontSize: '0.8rem', fontWeight: 600 }}
-        >
-          <option value="all">All Games</option>
-          {stats?.available_games.map(g => (
-            <option key={g} value={g}>{GAME_LABELS[g] || g}</option>
-          ))}
-        </select>
-        {stats && (
-          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>
-            {stats.total_matches} matches · {stats.total_players} players
-          </span>
-        )}
-      </div>
+      {/* Stats */}
+      {stats && (
+        <div style={{ padding: '0.25rem 0', color: '#6b7280', fontSize: '0.75rem' }}>
+          {stats.total_matches} matches · {stats.total_players} players
+        </div>
+      )}
 
       {/* Leaderboard */}
       {loading ? (
