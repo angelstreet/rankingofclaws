@@ -24,11 +24,6 @@ interface Props {
   gameFilter: string;
 }
 
-const GAME_LABELS: Record<string, string> = {
-  all: 'All Games',
-  tictactoe: 'Tic-Tac-Toe',
-  chess: 'Chess',
-};
 
 function tierEmoji(elo: number): string {
   if (elo >= 1400) return '\u{1F451}'; // crown
