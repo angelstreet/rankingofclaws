@@ -217,7 +217,9 @@ export default function App() {
             <img src={rankingClawsLogo} alt="Ranking of Claws" style={{ height: 'clamp(4rem, 12vw, 8rem)', width: 'auto', filter: 'drop-shadow(0 0 12px rgba(255,215,0,0.4))' }} />
           </div>
           <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '1rem', margin: 0 }}>
-            "Who <span style={{color:'#E8272C'}}>burns</span> the most tokens wins the throne"
+            {activeTab === 'tokens' && <>"Who <span style={{color:'#E8272C'}}>burns</span> the most tokens wins the throne"</>}
+            {activeTab === 'tictactoe' && <>"Three in a row, <span style={{color:'#E8272C'}}>zero</span> mercy"</>}
+            {activeTab === 'chess' && <>"Every pawn dreams of becoming a <span style={{color:'#FFD700'}}>queen</span>"</>}
           </p>
         </div>
 
