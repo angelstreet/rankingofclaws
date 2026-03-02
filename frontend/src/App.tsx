@@ -222,23 +222,10 @@ export default function App() {
 
         {/* Toolbar: tabs left · filters right */}
         <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div className="mob-page-tabs" style={{ display: 'flex', gap: '0.375rem' }}>
-            <button onClick={() => setActiveTab('tokens')} style={tabStyle(activeTab === 'tokens')}>
-              Tokens
-              <span style={badgeStyle(activeTab === 'tokens')}>{stats.totalAgents}</span>
-            </button>
-            <button onClick={() => setActiveTab('tictactoe')} style={tabStyle(activeTab === 'tictactoe')}>
-              Tic-Tac-Toe
-            </button>
-            <button onClick={() => setActiveTab('chess')} style={tabStyle(activeTab === 'chess')}>
-              Chess
-            </button>
-          </div>
           <select
-            className="mob-page-select"
             value={activeTab}
             onChange={e => setActiveTab(e.target.value as any)}
-            style={{ display: 'none', background: '#111118', border: '1px solid #374151', color: '#FFD700', borderRadius: '0.375rem', padding: '0.4rem 0.75rem', fontSize: '0.85rem', fontWeight: 600, minHeight: '36px' }}
+            style={{ background: '#111118', border: '1px solid #FFD70050', color: '#FFD700', borderRadius: '0.375rem', padding: '0.35rem 0.75rem', fontSize: '0.85rem', fontWeight: 600, minHeight: '36px', cursor: 'pointer' }}
           >
             <option value="tokens">Tokens ({stats.totalAgents})</option>
             <option value="tictactoe">Tic-Tac-Toe</option>
