@@ -24,12 +24,11 @@ interface Props {
   gameFilter: string;
 }
 
-
 function tierEmoji(elo: number): string {
-  if (elo >= 1400) return '\u{1F451}'; // crown
-  if (elo >= 1300) return '\u{2B50}';  // star
-  if (elo >= 1200) return '\u{1F6E1}'; // shield
-  return '\u{1F43E}'; // paw
+  if (elo >= 1400) return '\u{1F451}';
+  if (elo >= 1300) return '\u{2B50}';
+  if (elo >= 1200) return '\u{1F6E1}';
+  return '\u{1F43E}';
 }
 
 function timeAgo(ts: string): string {
@@ -41,32 +40,52 @@ function timeAgo(ts: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+const modeStyle = (active: boolean): React.CSSProperties => ({
+  padding: '0.25rem 0.6rem',
+  borderRadius: '2rem',
+  border: '1px solid',
+  borderColor: active ? '#FFD700' : '#374151',
+  background: active ? '#FFD70015' : 'transparent',
+  color: active ? '#FFD700' : '#6b7280',
+  cursor: 'pointer',
+  fontWeight: 600,
+  fontSize: '0.75rem',
+  transition: 'all 0.2s',
+});
+
 export default function GameLeaderboard({ buildUrl, gameFilter }: Props) {
   const [agents, setAgents] = useState<GameAgent[]>([]);
   const [stats, setStats] = useState<GameStats | null>(null);
-  
+  const [mode, setMode] = useState<'all' | 'pvp' | 'pve'>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch(buildUrl(`api/games/leaderboard?game=${gameFilter}`)).then(r => r.json()).catch(() => ({ agents: [] })),
+      fetch(buildUrl(`api/games/leaderboard?game=${gameFilter}&mode=${mode}`)).then(r => r.json()).catch(() => ({ agents: [] })),
       fetch(buildUrl('api/games/stats')).then(r => r.json()).catch(() => null),
     ]).then(([lb, st]) => {
       setAgents(lb.agents || []);
       if (st) setStats(st);
       setLoading(false);
     });
-  }, [gameFilter]);
+  }, [gameFilter, mode]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      {/* Stats */}
-      {stats && (
-        <div style={{ padding: '0.25rem 0', color: '#6b7280', fontSize: '0.75rem' }}>
-          {stats.total_matches} matches · {stats.total_players} players
+      {/* Mode toggle + stats */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.3rem' }}>
+          <button onClick={() => setMode('all')} style={modeStyle(mode === 'all')}>All</button>
+          <button onClick={() => setMode('pvp')} style={modeStyle(mode === 'pvp')}>vs Agents</button>
+          <button onClick={() => setMode('pve')} style={modeStyle(mode === 'pve')}>vs AI</button>
         </div>
-      )}
+        {stats && (
+          <span style={{ color: '#6b7280', fontSize: '0.7rem' }}>
+            {stats.total_matches} matches · {stats.total_players} players
+          </span>
+        )}
+      </div>
 
       {/* Leaderboard */}
       {loading ? (
@@ -76,22 +95,19 @@ export default function GameLeaderboard({ buildUrl, gameFilter }: Props) {
           No games played yet. Install the <code style={{ color: '#FFD700' }}>clawsgames</code> skill to compete!
         </div>
       ) : (
-        agents.map((a, i) => (
+        agents.map((a) => (
           <div
-            key={a.rank}
+            key={a.gateway_id}
             style={{
               display: 'flex', alignItems: 'center', gap: '0.75rem',
-              background: i === 0 ? '#FFD70008' : '#111118',
-              border: `1px solid ${i === 0 ? '#FFD70030' : '#1f2937'}`,
+              background: a.rank === 1 ? '#FFD70008' : '#111118',
+              border: `1px solid ${a.rank === 1 ? '#FFD70030' : '#1f2937'}`,
               borderRadius: '0.5rem', padding: '0.6rem 0.75rem',
             }}
           >
-            {/* Rank */}
-            <span style={{ width: '2rem', textAlign: 'center', fontWeight: 800, fontSize: '0.9rem', color: i < 3 ? '#FFD700' : '#6b7280' }}>
+            <span style={{ width: '2rem', textAlign: 'center', fontWeight: 800, fontSize: '0.9rem', color: a.rank <= 3 ? '#FFD700' : '#6b7280' }}>
               {a.rank}
             </span>
-
-            {/* Agent info */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{a.agent_name}</span>
@@ -101,8 +117,6 @@ export default function GameLeaderboard({ buildUrl, gameFilter }: Props) {
                 {a.wins}W · {a.losses}L · {a.draws}D ({a.total_games} games)
               </div>
             </div>
-
-            {/* ELO */}
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#FFD700' }}>
                 {tierEmoji(a.best_elo)} {a.best_elo}
