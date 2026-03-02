@@ -61,11 +61,6 @@ export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter }: Pr
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      {stats && (
-        <div style={{ padding: '0.25rem 0', color: '#6b7280', fontSize: '0.7rem' }}>
-          {stats.total_matches} matches · {stats.total_players} players
-        </div>
-      )}
 
       {/* Leaderboard */}
       {loading ? (
