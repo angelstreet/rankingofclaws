@@ -109,6 +109,7 @@ export default function App() {
   const [stats, setStats] = useState<Stats>({ totalAgents: 0, totalTokens: 0, totalCountries: 0 });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'tokens'|'tictactoe'|'chess'>('tokens');
+  const [gameMode, setGameMode] = useState<'all'|'pvp'|'pve'>('all');
   const [country, setCountry] = useState('');
   const [period, setPeriod] = useState<TimePeriod>('all');
   const [search, setSearch] = useState('');
@@ -222,15 +223,28 @@ export default function App() {
 
         {/* Toolbar: tabs left · filters right */}
         <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <select
-            value={activeTab}
-            onChange={e => setActiveTab(e.target.value as any)}
-            style={{ background: '#111118', border: '1px solid #FFD70050', color: '#FFD700', borderRadius: '0.375rem', padding: '0.35rem 0.75rem', fontSize: '0.85rem', fontWeight: 600, minHeight: '36px', cursor: 'pointer' }}
-          >
-            <option value="tokens">Tokens ({stats.totalAgents})</option>
-            <option value="tictactoe">Tic-Tac-Toe</option>
-            <option value="chess">Chess</option>
-          </select>
+          <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center' }}>
+            <select
+              value={activeTab}
+              onChange={e => setActiveTab(e.target.value as any)}
+              style={{ background: '#111118', border: '1px solid #FFD70050', color: '#FFD700', borderRadius: '0.375rem', padding: '0.35rem 0.75rem', fontSize: '0.85rem', fontWeight: 600, minHeight: '36px', cursor: 'pointer' }}
+            >
+              <option value="tokens">Tokens ({stats.totalAgents})</option>
+              <option value="tictactoe">Tic-Tac-Toe</option>
+              <option value="chess">Chess</option>
+            </select>
+            {activeTab !== 'tokens' && (
+              <select
+                value={gameMode}
+                onChange={e => setGameMode(e.target.value as any)}
+                style={{ background: '#111118', border: '1px solid #374151', color: '#d1d5db', borderRadius: '0.375rem', padding: '0.35rem 0.75rem', fontSize: '0.85rem', fontWeight: 500, minHeight: '36px', cursor: 'pointer' }}
+              >
+                <option value="all">All</option>
+                <option value="pvp">vs Agents</option>
+                <option value="pve">vs AI</option>
+              </select>
+            )}
+          </div>
           <div className="mob-hide" style={{ display: 'flex', flex: 1, gap: '0.375rem', minWidth: 0, alignItems: 'center' }}>
             {myAgent ? (
               <>
@@ -270,7 +284,7 @@ export default function App() {
           {activeTab === 'tokens' ? (
             <Leaderboard agents={filtered} loading={loading} myAgentName={myAgent?.agent} />
           ) : (
-            <GameLeaderboard apiBase={apiBase} buildUrl={buildUrl} gameFilter={activeTab} />
+            <GameLeaderboard apiBase={apiBase} buildUrl={buildUrl} gameFilter={activeTab} modeFilter={gameMode} />
           )}
         </div>
       </main>

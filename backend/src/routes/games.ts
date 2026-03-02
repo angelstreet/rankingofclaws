@@ -69,7 +69,7 @@ router.get('/leaderboard', (req: Request, res: Response) => {
 });
 
 router.get('/stats', (_req: Request, res: Response) => {
-  const total = db.prepare('SELECT COUNT(*) as cnt FROM game_results').get() as any;
+  const total = db.prepare('SELECT COUNT(DISTINCT match_id) as cnt FROM game_results').get() as any;
   const players = db.prepare("SELECT COUNT(DISTINCT gateway_id) as cnt FROM game_results WHERE gateway_id NOT LIKE 'ai-%'").get() as any;
   const games = db.prepare('SELECT DISTINCT game FROM game_results').all() as any[];
 

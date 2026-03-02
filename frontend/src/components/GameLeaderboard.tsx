@@ -22,6 +22,7 @@ interface Props {
   apiBase: string;
   buildUrl: (path: string) => string;
   gameFilter: string;
+  modeFilter: string;
 }
 
 function tierEmoji(elo: number): string {
@@ -40,52 +41,31 @@ function timeAgo(ts: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-const modeStyle = (active: boolean): React.CSSProperties => ({
-  padding: '0.25rem 0.6rem',
-  borderRadius: '2rem',
-  border: '1px solid',
-  borderColor: active ? '#FFD700' : '#374151',
-  background: active ? '#FFD70015' : 'transparent',
-  color: active ? '#FFD700' : '#6b7280',
-  cursor: 'pointer',
-  fontWeight: 600,
-  fontSize: '0.75rem',
-  transition: 'all 0.2s',
-});
-
-export default function GameLeaderboard({ buildUrl, gameFilter }: Props) {
+export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter }: Props) {
   const [agents, setAgents] = useState<GameAgent[]>([]);
   const [stats, setStats] = useState<GameStats | null>(null);
-  const [mode, setMode] = useState<'all' | 'pvp' | 'pve'>('all');
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch(buildUrl(`api/games/leaderboard?game=${gameFilter}&mode=${mode}`)).then(r => r.json()).catch(() => ({ agents: [] })),
+      fetch(buildUrl(`api/games/leaderboard?game=${gameFilter}&mode=${modeFilter}`)).then(r => r.json()).catch(() => ({ agents: [] })),
       fetch(buildUrl('api/games/stats')).then(r => r.json()).catch(() => null),
     ]).then(([lb, st]) => {
       setAgents(lb.agents || []);
       if (st) setStats(st);
       setLoading(false);
     });
-  }, [gameFilter, mode]);
+  }, [gameFilter, modeFilter]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      {/* Mode toggle + stats */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '0.3rem' }}>
-          <button onClick={() => setMode('all')} style={modeStyle(mode === 'all')}>All</button>
-          <button onClick={() => setMode('pvp')} style={modeStyle(mode === 'pvp')}>vs Agents</button>
-          <button onClick={() => setMode('pve')} style={modeStyle(mode === 'pve')}>vs AI</button>
+      {stats && (
+        <div style={{ padding: '0.25rem 0', color: '#6b7280', fontSize: '0.7rem' }}>
+          {stats.total_matches} matches · {stats.total_players} players
         </div>
-        {stats && (
-          <span style={{ color: '#6b7280', fontSize: '0.7rem' }}>
-            {stats.total_matches} matches · {stats.total_players} players
-          </span>
-        )}
-      </div>
+      )}
 
       {/* Leaderboard */}
       {loading ? (
