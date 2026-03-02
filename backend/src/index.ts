@@ -7,6 +7,7 @@ import leaderboardRouter from './routes/leaderboard';
 import statsRouter from './routes/stats';
 import providersRouter from './routes/providers';
 import rankRouter from './routes/rank';
+import gamesRouter from './routes/games';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -39,6 +40,7 @@ app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/providers', providersRouter);
 app.use('/api/rank', rankRouter);
+app.use('/api/games', gamesRouter);
 
 // Health check
 app.get('/health', (_req, res) => {

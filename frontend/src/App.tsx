@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import type { Agent, Stats, TimePeriod } from './types';
 import Filters from './components/Filters';
 import Leaderboard from './components/Leaderboard';
+import GameLeaderboard from './components/GameLeaderboard';
 import rankingClawsLogo from './assets/rankingofclaws2.png';
 
 interface ApiAgent {
@@ -107,6 +108,7 @@ export default function App() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [stats, setStats] = useState<Stats>({ totalAgents: 0, totalTokens: 0, totalCountries: 0 });
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'agents'|'games'>('agents');
   const [country, setCountry] = useState('');
   const [period, setPeriod] = useState<TimePeriod>('all');
   const [search, setSearch] = useState('');
@@ -221,18 +223,22 @@ export default function App() {
         {/* Toolbar: tabs left · filters right */}
         <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div className="mob-page-tabs" style={{ display: 'flex', gap: '0.375rem' }}>
-            <button style={tabStyle(true)}>
+            <button onClick={() => setActiveTab('agents')} style={tabStyle(activeTab === 'agents')}>
               Agents
-              <span style={badgeStyle(true)}>{stats.totalAgents}</span>
+              <span style={badgeStyle(activeTab === 'agents')}>{stats.totalAgents}</span>
+            </button>
+            <button onClick={() => setActiveTab('games')} style={tabStyle(activeTab === 'games')}>
+              Games
             </button>
           </div>
           <select
             className="mob-page-select"
-            value="claws"
-            onChange={() => {}}
+            value={activeTab}
+            onChange={e => setActiveTab(e.target.value as any)}
             style={{ display: 'none', background: '#111118', border: '1px solid #374151', color: '#FFD700', borderRadius: '0.375rem', padding: '0.4rem 0.75rem', fontSize: '0.85rem', fontWeight: 600, minHeight: '36px' }}
           >
-            <option value="claws">Agents ({stats.totalAgents})</option>
+            <option value="agents">Agents ({stats.totalAgents})</option>
+            <option value="games">Games</option>
           </select>
           <div className="mob-hide" style={{ display: 'flex', flex: 1, gap: '0.375rem', minWidth: 0, alignItems: 'center' }}>
             {myAgent ? (
@@ -270,7 +276,11 @@ export default function App() {
       {/* ── Scrollable content area ── */}
       <main style={{ flex: 1, overflow: 'hidden', maxWidth: '56rem', width: '100%', margin: '0 auto', padding: '0.5rem 1rem 0', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflowY: 'auto', borderRadius: '0.75rem' }}>
-          <Leaderboard agents={filtered} loading={loading} myAgentName={myAgent?.agent} />
+          {activeTab === 'agents' ? (
+            <Leaderboard agents={filtered} loading={loading} myAgentName={myAgent?.agent} />
+          ) : (
+            <GameLeaderboard apiBase={apiBase} buildUrl={buildUrl} />
+          )}
         </div>
       </main>
 
