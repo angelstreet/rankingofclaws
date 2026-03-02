@@ -74,7 +74,7 @@ router.get('/stats', (_req: Request, res: Response) => {
   const games = db.prepare('SELECT DISTINCT game FROM game_results').all() as any[];
 
   return res.json({
-    total_matches: Math.floor(total.cnt / 2),
+    total_matches: total.cnt,
     total_players: players.cnt,
     available_games: games.map(g => g.game),
   });
