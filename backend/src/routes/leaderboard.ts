@@ -12,7 +12,7 @@ router.get('/', (req: Request, res: Response) => {
     SELECT
       ROW_NUMBER() OVER (ORDER BY tokens_total DESC) as rank,
       id, gateway_id, agent_name, country,
-      tokens_total, tokens_in, tokens_out, sessions_total,
+      tokens_total, tokens_in, tokens_out, cost_total, sessions_total,
       last_reported_at, created_at
     FROM agents
     WHERE gateway_id NOT LIKE 'ai-%' AND tokens_total > 0

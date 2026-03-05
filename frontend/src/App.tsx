@@ -3,6 +3,7 @@ import type { Agent, Stats, TimePeriod } from './types';
 import Filters from './components/Filters';
 import Leaderboard from './components/Leaderboard';
 import GameLeaderboard from './components/GameLeaderboard';
+import Providers from './components/Providers';
 import rankingClawsLogo from './assets/rankingofclaws2.png';
 
 interface ApiAgent {
@@ -61,36 +62,6 @@ async function safeFetch<T>(url: string, fallback: T): Promise<T> {
   }
 }
 
-function tabStyle(active: boolean): React.CSSProperties {
-  return {
-    padding: '0.3rem 0.7rem',
-    borderRadius: '2rem',
-    border: '1px solid',
-    borderColor: active ? '#FFD700' : '#374151',
-    background: active ? '#FFD70015' : 'transparent',
-    color: active ? '#FFD700' : '#9ca3af',
-    cursor: 'pointer',
-    fontWeight: 600,
-    fontSize: '0.8rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    transition: 'all 0.2s',
-  };
-}
-
-function badgeStyle(active: boolean): React.CSSProperties {
-  return {
-    background: active ? '#FFD70030' : '#1f2937',
-    color: active ? '#FFD700' : '#6b7280',
-    fontSize: '0.65rem',
-    padding: '0.1rem 0.4rem',
-    borderRadius: '9999px',
-    fontWeight: 700,
-    lineHeight: 1.4,
-  };
-}
-
 export default function App() {
   const apiBase = import.meta.env.VITE_API_URL || (() => {
     // Match VoiceBox routing behavior:
@@ -108,7 +79,7 @@ export default function App() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [stats, setStats] = useState<Stats>({ totalAgents: 0, totalTokens: 0, totalCountries: 0 });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'tokens'|'tictactoe'|'chess'>('tokens');
+  const [activeTab, setActiveTab] = useState<'tokens'|'models'|'tictactoe'|'chess'|'pokemon'>('tokens');
   const [gameMode, setGameMode] = useState<'all'|'pvp'|'pve'>('all');
   const [country, setCountry] = useState('');
   const [period, setPeriod] = useState<TimePeriod>('all');
@@ -218,6 +189,7 @@ export default function App() {
           </div>
           <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '1rem', margin: 0 }}>
             {activeTab === 'tokens' && <>"Who <span style={{color:'#E8272C'}}>burns</span> the most tokens wins the throne"</>}
+            {activeTab === 'models' && <>"Model vs model: who spends the most <span style={{color:'#FFD700'}}>tokens</span>?"</>}
             {activeTab === 'tictactoe' && <>"Three in a row, <span style={{color:'#E8272C'}}>zero</span> mercy"</>}
             {activeTab === 'chess' && <>"Every pawn dreams of becoming a <span style={{color:'#FFD700'}}>queen</span>"</>}
             {activeTab === 'pokemon' && <>"Gotta <span style={{color:'#E8272C'}}>catch</span> 'em all... and make 'em <span style={{color:'#FFD700'}}>fight</span>"</>}
@@ -233,11 +205,12 @@ export default function App() {
               style={{ background: '#111118', border: '1px solid #FFD70050', color: '#FFD700', borderRadius: '0.375rem', padding: '0.35rem 0.75rem', fontSize: '0.85rem', fontWeight: 600, minHeight: '36px', cursor: 'pointer' }}
             >
               <option value="tokens">Tokens ({stats.totalAgents})</option>
+              <option value="models">Models</option>
               <option value="tictactoe">Tic-Tac-Toe</option>
               <option value="chess">Chess</option>
             <option value="pokemon">Pokemon</option>
             </select>
-            {activeTab !== 'tokens' && (
+            {(activeTab === 'tictactoe' || activeTab === 'chess' || activeTab === 'pokemon') && (
               <select
                 value={gameMode}
                 onChange={e => setGameMode(e.target.value as any)}
@@ -287,6 +260,8 @@ export default function App() {
         <div style={{ flex: 1, overflowY: 'auto', borderRadius: '0.75rem' }}>
           {activeTab === 'tokens' ? (
             <Leaderboard agents={filtered} loading={loading} myAgentName={myAgent?.agent} />
+          ) : activeTab === 'models' ? (
+            <Providers apiUrl={buildUrl('api')} country={country} period={period} />
           ) : (
             <GameLeaderboard apiBase={apiBase} buildUrl={buildUrl} gameFilter={activeTab} modeFilter={gameMode} />
           )}

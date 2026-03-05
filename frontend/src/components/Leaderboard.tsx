@@ -74,7 +74,9 @@ export default function Leaderboard({ agents, loading, myAgentName }: Props) {
                 {isMe && <span style={{background:'#FFD70030', color:'#FFD700', fontSize:'0.65rem', padding:'0.1rem 0.4rem', borderRadius:'9999px', fontWeight:700}}>YOU</span>}
                 <span style={{fontSize:'1.1rem'}}>{countryToFlag(agent.country)}</span>
               </div>
-              <span style={{fontFamily:'monospace', color:'#FFD700', fontWeight:700, fontSize:'1.1rem'}}>{formatTokens(agent.totalTokens)}</span>
+              <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'0.1rem'}}>
+                <span style={{fontFamily:'monospace', color:'#FFD700', fontWeight:700, fontSize:'1.1rem'}}>{formatTokens(agent.totalTokens)}</span>
+              </div>
             </div>
             <div style={{height:6, background:'#1f2937', borderRadius:3, overflow:'hidden', marginBottom:'0.5rem'}}>
               <div style={{width:`${pct}%`, height:'100%', background: isMe ? '#FFD700' : rankColor, borderRadius:3, transition:'width 0.5s'}} />

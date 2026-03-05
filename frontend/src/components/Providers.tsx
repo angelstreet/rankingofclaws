@@ -31,20 +31,33 @@ export default function Providers({ apiUrl, country, period, onLoad }: { apiUrl:
   void period;
 
   useEffect(() => {
+    setLoading(true);
     fetch(`${apiUrl}/providers${country ? `?country=${country}` : ''}`)
       .then(r => r.json())
       .then(data => { setProviders(data); setLoading(false); onLoad?.(data.length); })
       .catch(() => setLoading(false));
-  }, [apiUrl]);
+  }, [apiUrl, country, onLoad]);
 
   if (loading) return <div style={{textAlign:'center', color:'#6b7280', padding:'2rem'}}>Loading providers...</div>;
   if (!providers.length) return <div style={{textAlign:'center', color:'#6b7280', padding:'2rem'}}>No provider data yet</div>;
 
-  const maxTokens = providers[0]?.total_tokens || 1;
+  const cleanedProviders = providers
+    .map((p) => ({
+      ...p,
+      models: p.models.filter((m) => {
+        const v = m.trim().toLowerCase();
+        return v !== 'mixed' && v !== 'unknown';
+      }),
+    }))
+    .filter((p) => p.provider !== 'unknown');
+
+  if (!cleanedProviders.length) return <div style={{textAlign:'center', color:'#6b7280', padding:'2rem'}}>No provider data yet</div>;
+
+  const maxTokens = cleanedProviders[0]?.total_tokens || 1;
 
   return (
     <div style={{display:'flex', flexDirection:'column', gap:'0.75rem'}}>
-      {providers.map(p => {
+      {cleanedProviders.map(p => {
         const pct = ((p.total_tokens / maxTokens) * 100).toFixed(1);
         const isTop3 = p.rank <= 3;
         const rankColor = RANK_COLORS[p.rank] || '#6b7280';

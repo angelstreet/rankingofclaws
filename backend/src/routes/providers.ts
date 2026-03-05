@@ -44,6 +44,7 @@ router.get('/', (_req: Request, res: Response) => {
            COUNT(DISTINCT gateway_id) as agent_count
     FROM reports 
     WHERE model IS NOT NULL
+      AND LOWER(TRIM(model)) NOT IN ('mixed', 'unknown')
     GROUP BY model
   `).all() as any[];
 
@@ -86,7 +87,10 @@ router.get('/', (_req: Request, res: Response) => {
 
   // Also count distinct agents per provider
   const agentRows = db.prepare(`
-    SELECT DISTINCT gateway_id, model FROM reports WHERE model IS NOT NULL
+    SELECT DISTINCT gateway_id, model
+    FROM reports
+    WHERE model IS NOT NULL
+      AND LOWER(TRIM(model)) NOT IN ('mixed', 'unknown')
   `).all() as any[];
   
   for (const row of agentRows) {

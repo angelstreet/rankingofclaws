@@ -5,7 +5,7 @@ const router = Router();
 
 // In-memory rate limit store: gateway_id -> last reported timestamp
 const rateLimitStore = new Map<string, number>();
-const RATE_LIMIT_MS = 60 * 1000; // 1 hour
+const RATE_LIMIT_MS = 60 * 1000; // 1 minute
 
 router.post('/', (req: Request, res: Response) => {
   const {
@@ -15,6 +15,7 @@ router.post('/', (req: Request, res: Response) => {
     tokens_delta,
     tokens_in_delta = 0,
     tokens_out_delta = 0,
+    cost_delta = 0,
     model,
   } = req.body;
 
@@ -45,18 +46,23 @@ router.post('/', (req: Request, res: Response) => {
     });
   }
 
+  const safeCostDelta = typeof cost_delta === 'number' && Number.isFinite(cost_delta) && cost_delta >= 0
+    ? cost_delta
+    : 0;
+
   // Upsert agent + insert report in a transaction
   const upsertAndReport = db.transaction(() => {
     // Upsert agent
     db.prepare(`
-      INSERT INTO agents (gateway_id, agent_name, country, tokens_total, tokens_in, tokens_out, sessions_total, last_reported_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, 1, datetime('now'), datetime('now'))
+      INSERT INTO agents (gateway_id, agent_name, country, tokens_total, tokens_in, tokens_out, cost_total, sessions_total, last_reported_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, datetime('now'), datetime('now'))
       ON CONFLICT(gateway_id) DO UPDATE SET
         agent_name = excluded.agent_name,
         country = COALESCE(excluded.country, agents.country),
         tokens_total = agents.tokens_total + excluded.tokens_total,
         tokens_in = agents.tokens_in + excluded.tokens_in,
         tokens_out = agents.tokens_out + excluded.tokens_out,
+        cost_total = agents.cost_total + excluded.cost_total,
         sessions_total = agents.sessions_total + 1,
         last_reported_at = datetime('now'),
         updated_at = datetime('now')
@@ -67,13 +73,14 @@ router.post('/', (req: Request, res: Response) => {
       tokens_delta,
       tokens_in_delta,
       tokens_out_delta,
+      safeCostDelta,
     );
 
     // Insert report
     db.prepare(`
-      INSERT INTO reports (gateway_id, tokens_delta, tokens_in_delta, tokens_out_delta, model)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(gateway_id, tokens_delta, tokens_in_delta, tokens_out_delta, model || null);
+      INSERT INTO reports (gateway_id, tokens_delta, tokens_in_delta, tokens_out_delta, cost_delta, model)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(gateway_id, tokens_delta, tokens_in_delta, tokens_out_delta, safeCostDelta, model || null);
   });
 
   upsertAndReport();

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 interface MatchRecord {
   id: number;
+  gateway_id?: string;
   game: string;
   result: 'win' | 'loss' | 'draw';
   opponent_gateway_id: string | null;
