@@ -107,7 +107,7 @@ function InlineHistory({ gatewayId, buildUrl }: { gatewayId: string; buildUrl: (
           { label: 'L', value: stats.losses, color: '#ef4444' },
           { label: 'D', value: stats.draws, color: '#9ca3af' },
           { label: 'Win%', value: `${stats.win_rate}%`, color: '#FFD700' },
-          { label: 'Peak', value: stats.peak_elo, color: '#a78bfa' },
+          { label: 'Peak ELO', value: stats.peak_elo, color: '#a78bfa' },
         ].map(s => (
           <div key={s.label} style={{
             background: '#0d0d14', border: '1px solid #1f2937',
@@ -251,7 +251,7 @@ export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter }: Pr
                     <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>{a.country !== 'unknown' ? a.country : ''}</span>
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.15rem' }}>
-                    {a.wins}W · {a.losses}L · {a.draws}D ({a.total_games} games)
+                    {a.wins}W · {a.losses}L · {a.draws}D
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
