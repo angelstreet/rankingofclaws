@@ -77,6 +77,10 @@ function resultLabel(r: string) {
   return 'D';
 }
 
+function buildClawsGamesMatchUrl(matchId: string): string {
+  return `https://65.108.14.251:8080/clawsgames/match/${encodeURIComponent(matchId)}`;
+}
+
 function InlineHistory({ gatewayId, buildUrl }: { gatewayId: string; buildUrl: (path: string) => string }) {
   const [history, setHistory] = useState<PlayerHistory | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,14 +146,22 @@ function InlineHistory({ gatewayId, buildUrl }: { gatewayId: string; buildUrl: (
           </div>
           {matches.map(m => {
             const eloChange = (m.elo_after || 0) - (m.elo_before || 0);
+            const hasMatchLink = !!m.match_id;
+            const matchUrl = hasMatchLink ? buildClawsGamesMatchUrl(m.match_id as string) : null;
             return (
-              <div
+              <a
                 key={m.id}
+                href={matchUrl || '#'}
+                target={hasMatchLink ? '_blank' : undefined}
+                rel={hasMatchLink ? 'noopener noreferrer' : undefined}
+                onClick={e => { if (!hasMatchLink) e.preventDefault(); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
                   background: '#0d0d14', borderRadius: '0.375rem',
                   padding: '0.4rem 0.5rem',
                   border: '1px solid #1f2937',
+                  textDecoration: 'none',
+                  cursor: hasMatchLink ? 'pointer' : 'default',
                 }}
               >
                 {/* Result badge */}
@@ -183,7 +195,7 @@ function InlineHistory({ gatewayId, buildUrl }: { gatewayId: string; buildUrl: (
                   </div>
                   <div style={{ fontSize: '0.6rem', color: '#4b5563' }}>{m.elo_after}</div>
                 </div>
-              </div>
+              </a>
             );
           })}
         </div>
