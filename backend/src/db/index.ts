@@ -20,4 +20,9 @@ db.pragma('foreign_keys = ON');
 const schema = fs.readFileSync(SCHEMA_PATH, 'utf-8');
 db.exec(schema);
 
+// Safe column additions (idempotent — ALTER TABLE fails silently if column exists)
+try { db.exec("ALTER TABLE game_results ADD COLUMN session_id TEXT"); } catch {}
+try { db.exec("ALTER TABLE game_results ADD COLUMN session_name TEXT"); } catch {}
+try { db.exec("ALTER TABLE game_results ADD COLUMN model TEXT"); } catch {}
+
 export default db;

@@ -6,10 +6,22 @@ const router = Router();
 router.get('/leaderboard', (req: Request, res: Response) => {
   const game = req.query.game as string || 'all';
   const mode = req.query.mode as string || 'all';
+  const session = req.query.session as string || '';
 
   let modeFilter = '';
   if (mode === 'pvp') modeFilter = "AND opponent_gateway_id IS NOT NULL AND opponent_gateway_id NOT LIKE 'ai-%'";
   else if (mode === 'pve') modeFilter = "AND (opponent_gateway_id LIKE 'ai-%' OR opponent_gateway_id IS NULL)";
+
+  let sessionFilter = '';
+  let sessionParams: any[] = [];
+  if (session && session !== 'all') {
+    if (session === 'world') {
+      sessionFilter = "AND (session_name = 'World' OR session_id IS NULL)";
+    } else {
+      sessionFilter = "AND session_id = ?";
+      sessionParams = [session];
+    }
+  }
 
   let query: string;
   let params: any[] = [];
@@ -24,11 +36,12 @@ router.get('/leaderboard', (req: Request, res: Response) => {
              MAX(elo_after) as best_elo,
              MAX(reported_at) as last_played
       FROM game_results
-      WHERE gateway_id NOT LIKE 'ai-%' ${modeFilter}
+      WHERE gateway_id NOT LIKE 'ai-%' ${modeFilter} ${sessionFilter}
       GROUP BY gateway_id
       ORDER BY wins DESC, best_elo DESC
       LIMIT 100
     `;
+    params = [...sessionParams];
   } else {
     query = `
       SELECT gateway_id, game,
@@ -39,12 +52,12 @@ router.get('/leaderboard', (req: Request, res: Response) => {
              MAX(elo_after) as best_elo,
              MAX(reported_at) as last_played
       FROM game_results
-      WHERE game = ? AND gateway_id NOT LIKE 'ai-%' ${modeFilter}
+      WHERE game = ? AND gateway_id NOT LIKE 'ai-%' ${modeFilter} ${sessionFilter}
       GROUP BY gateway_id
       ORDER BY wins DESC, best_elo DESC
       LIMIT 100
     `;
-    params = [game];
+    params = [game, ...sessionParams];
   }
 
   const results = db.prepare(query).all(...params) as any[];
@@ -65,7 +78,7 @@ router.get('/leaderboard', (req: Request, res: Response) => {
     };
   });
 
-  return res.json({ agents: enriched, game, mode });
+  return res.json({ agents: enriched, game, mode, session: session || undefined });
 });
 
 router.get('/stats', (_req: Request, res: Response) => {
@@ -139,6 +152,41 @@ router.get('/match/:matchId', (req: Request, res: Response) => {
   if (!rows.length) return res.status(404).json({ error: 'Match not found' });
 
   return res.json({ match_id: matchId, participants: rows });
+});
+
+router.get('/sessions', (req: Request, res: Response) => {
+  const game = (req.query.game as string) || '';
+  if (!game) return res.json([]);
+  const rows = db.prepare(`
+    SELECT DISTINCT session_id, session_name, COUNT(*) as match_count,
+           MAX(reported_at) as last_played
+    FROM game_results
+    WHERE game = ? AND session_id IS NOT NULL
+    GROUP BY session_id, session_name
+    ORDER BY last_played DESC
+  `).all(game);
+  return res.json(rows);
+});
+
+router.get('/models', (req: Request, res: Response) => {
+  const game = (req.query.game as string) || '';
+  const rows = db.prepare(`
+    SELECT model,
+           SUM(CASE WHEN result = 'win' THEN 1 ELSE 0 END) as wins,
+           SUM(CASE WHEN result = 'loss' THEN 1 ELSE 0 END) as losses,
+           SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
+           COUNT(*) as total_games,
+           COUNT(DISTINCT gateway_id) as agent_count,
+           MAX(elo_after) as best_elo,
+           MAX(reported_at) as last_played
+    FROM game_results
+    WHERE model IS NOT NULL AND model != ''
+    ${game ? 'AND game = ?' : ''}
+    GROUP BY model
+    ORDER BY wins DESC, total_games DESC
+    LIMIT 50
+  `).all(...(game ? [game] : []));
+  return res.json({ models: rows, game: game || 'all' });
 });
 
 export default router;

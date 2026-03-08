@@ -95,7 +95,7 @@ export default router;
 
 // Game result reporting (from ClawsGames)
 router.post('/game', (req: Request, res: Response) => {
-  const { gateway_id, agent_name, country, game, result, opponent_gateway_id, opponent_name, elo_before, elo_after, match_id } = req.body;
+  const { gateway_id, agent_name, country, game, result, opponent_gateway_id, opponent_name, elo_before, elo_after, match_id, session_id, session_name, model } = req.body;
 
   if (!gateway_id || !game || !result) {
     return res.status(400).json({ error: 'Missing: gateway_id, game, result' });
@@ -116,9 +116,9 @@ router.post('/game', (req: Request, res: Response) => {
 
   // Record game result
   db.prepare(`
-    INSERT INTO game_results (gateway_id, game, result, opponent_gateway_id, opponent_name, elo_before, elo_after, match_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(gateway_id, game, result, opponent_gateway_id || null, opponent_name || null, elo_before || null, elo_after || null, match_id || null);
+    INSERT INTO game_results (gateway_id, game, result, opponent_gateway_id, opponent_name, elo_before, elo_after, match_id, session_id, session_name, model)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(gateway_id, game, result, opponent_gateway_id || null, opponent_name || null, elo_before || null, elo_after || null, match_id || null, session_id || null, session_name || null, model || null);
 
   return res.status(200).json({ success: true });
 });
