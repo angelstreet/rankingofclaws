@@ -83,7 +83,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'tokens'|'models'|'tictactoe'|'chess'|'pokemon'|'heartclaws'>('tokens');
   const [gameMode, setGameMode] = useState<'all'|'pvp'|'pve'>('all');
   const [viewMode, setViewMode] = useState<'agents'|'models'>('agents');
-  const [heartclawsSession, setHeartclawsSession] = useState('');
+  const [heartclawsSession, setHeartclawsSession] = useState('world');
   const [heartclawsSessions, setHeartclawsSessions] = useState<{ session_id: string; session_name: string; match_count: number }[]>([]);
   const [country, setCountry] = useState('');
   const [period, setPeriod] = useState<TimePeriod>('all');
@@ -226,7 +226,7 @@ export default function App() {
             <option value="pokemon">Pokemon</option>
               <option value="heartclaws">HeartClaws</option>
             </select>
-            {(activeTab === 'tictactoe' || activeTab === 'chess' || activeTab === 'pokemon' || activeTab === 'heartclaws') && (
+            {(activeTab === 'tictactoe' || activeTab === 'chess' || activeTab === 'pokemon') && (
               <select
                 value={gameMode}
                 onChange={e => setGameMode(e.target.value as any)}
@@ -252,9 +252,8 @@ export default function App() {
                   onChange={e => setHeartclawsSession(e.target.value)}
                   style={{ background: '#111118', border: '1px solid #374151', color: '#d1d5db', borderRadius: '0.375rem', padding: '0.35rem 0.75rem', fontSize: '0.85rem', fontWeight: 500, minHeight: '36px', cursor: 'pointer' }}
                 >
-                  <option value="">All Sessions</option>
                   <option value="world">World</option>
-                  {heartclawsSessions.filter(s => s.session_id !== 'world').map(s => (
+                  {heartclawsSessions.map(s => (
                     <option key={s.session_id} value={s.session_id}>
                       {s.session_name} ({s.match_count})
                     </option>
@@ -282,7 +281,7 @@ export default function App() {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && fetchRank(search)}
-                  placeholder="Find your agent..."
+                  placeholder={activeTab === 'heartclaws' && viewMode === 'models' ? "Find your model..." : "Find your agent..."}
                   style={{ flex: 1, background: '#111118', border: '1px solid #374151', borderRadius: '0.375rem', padding: '0.3rem 0.625rem', color: '#f3f4f6', fontSize: '0.8rem', outline: 'none' }}
                 />
                 <button onClick={() => fetchRank(search)} disabled={searchLoading} style={{ background: '#FFD70020', border: '1px solid #FFD70050', color: '#FFD700', borderRadius: '0.375rem', padding: '0.3rem 0.625rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
@@ -292,7 +291,9 @@ export default function App() {
             )}
             {searchError && <span style={{ color: '#ef4444', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>{searchError}</span>}
           </div>
-          <Filters countries={countries} selectedCountry={country} onCountryChange={setCountry} period={period} onPeriodChange={setPeriod} />
+          {activeTab !== 'heartclaws' && (
+            <Filters countries={countries} selectedCountry={country} onCountryChange={setCountry} period={period} onPeriodChange={setPeriod} />
+          )}
         </div>
       </header>
 
@@ -304,9 +305,9 @@ export default function App() {
           ) : activeTab === 'models' ? (
             <Providers apiUrl={buildUrl('api')} country={country} period={period} />
           ) : activeTab === 'heartclaws' && viewMode === 'models' ? (
-            <ModelLeaderboard buildUrl={buildUrl} game="heartclaws" />
+            <ModelLeaderboard buildUrl={buildUrl} game="heartclaws" session={heartclawsSession} />
           ) : (
-            <GameLeaderboard apiBase={apiBase} buildUrl={buildUrl} gameFilter={activeTab} modeFilter={gameMode} sessionFilter={activeTab === 'heartclaws' ? heartclawsSession : undefined} />
+            <GameLeaderboard apiBase={apiBase} buildUrl={buildUrl} gameFilter={activeTab} modeFilter={activeTab === 'heartclaws' ? 'all' : gameMode} sessionFilter={activeTab === 'heartclaws' ? heartclawsSession : undefined} isCompositeScore={activeTab === 'heartclaws'} />
           )}
         </div>
       </main>

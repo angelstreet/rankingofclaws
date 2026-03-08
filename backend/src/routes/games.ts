@@ -16,7 +16,7 @@ router.get('/leaderboard', (req: Request, res: Response) => {
   let sessionParams: any[] = [];
   if (session && session !== 'all') {
     if (session === 'world') {
-      sessionFilter = "AND (session_name = 'World' OR session_id IS NULL)";
+      sessionFilter = "AND session_id = 'world'";
     } else {
       sessionFilter = "AND session_id = ?";
       sessionParams = [session];
@@ -64,7 +64,7 @@ router.get('/leaderboard', (req: Request, res: Response) => {
 
   const enriched = results.map((r, i) => {
     const agent = db.prepare('SELECT agent_name, country FROM agents WHERE gateway_id = ?').get(r.gateway_id) as any;
-    return {
+    const entry: any = {
       rank: i + 1,
       gateway_id: r.gateway_id,
       agent_name: agent?.agent_name || 'Unknown',
@@ -76,7 +76,31 @@ router.get('/leaderboard', (req: Request, res: Response) => {
       best_elo: r.best_elo,
       last_played: r.last_played,
     };
+    // For HeartClaws, include latest dimension scores
+    if (game === 'heartclaws') {
+      const latest = db.prepare(`
+        SELECT score_territory, score_economy, score_military, score_influence, score_composite, model
+        FROM game_results
+        WHERE gateway_id = ? AND game = 'heartclaws' AND score_composite IS NOT NULL
+        ORDER BY reported_at DESC LIMIT 1
+      `).get(r.gateway_id) as any;
+      if (latest) {
+        entry.score_territory = latest.score_territory;
+        entry.score_economy = latest.score_economy;
+        entry.score_military = latest.score_military;
+        entry.score_influence = latest.score_influence;
+        entry.score_composite = latest.score_composite;
+        entry.model = latest.model;
+      }
+    }
+    return entry;
   });
+
+  // For HeartClaws, sort by composite score (best_elo) DESC instead of wins
+  if (game === 'heartclaws') {
+    enriched.sort((a: any, b: any) => (b.best_elo || 0) - (a.best_elo || 0));
+    enriched.forEach((e: any, i: number) => e.rank = i + 1);
+  }
 
   return res.json({ agents: enriched, game, mode, session: session || undefined });
 });
@@ -170,6 +194,24 @@ router.get('/sessions', (req: Request, res: Response) => {
 
 router.get('/models', (req: Request, res: Response) => {
   const game = (req.query.game as string) || '';
+  const session = (req.query.session as string) || '';
+
+  let sessionFilter = '';
+  const params: any[] = [];
+
+  if (game) {
+    params.push(game);
+  }
+
+  if (session && session !== 'all') {
+    if (session === 'world') {
+      sessionFilter = "AND session_id = 'world'";
+    } else {
+      sessionFilter = "AND session_id = ?";
+      params.push(session);
+    }
+  }
+
   const rows = db.prepare(`
     SELECT model,
            SUM(CASE WHEN result = 'win' THEN 1 ELSE 0 END) as wins,
@@ -182,11 +224,12 @@ router.get('/models', (req: Request, res: Response) => {
     FROM game_results
     WHERE model IS NOT NULL AND model != ''
     ${game ? 'AND game = ?' : ''}
+    ${sessionFilter}
     GROUP BY model
     ORDER BY wins DESC, total_games DESC
     LIMIT 50
-  `).all(...(game ? [game] : []));
-  return res.json({ models: rows, game: game || 'all' });
+  `).all(...params);
+  return res.json({ models: rows, game: game || 'all', session: session || undefined });
 });
 
 export default router;

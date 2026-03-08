@@ -24,5 +24,11 @@ db.exec(schema);
 try { db.exec("ALTER TABLE game_results ADD COLUMN session_id TEXT"); } catch {}
 try { db.exec("ALTER TABLE game_results ADD COLUMN session_name TEXT"); } catch {}
 try { db.exec("ALTER TABLE game_results ADD COLUMN model TEXT"); } catch {}
+// HeartClaws dimension scores
+try { db.exec("ALTER TABLE game_results ADD COLUMN score_territory REAL"); } catch {}
+try { db.exec("ALTER TABLE game_results ADD COLUMN score_economy REAL"); } catch {}
+try { db.exec("ALTER TABLE game_results ADD COLUMN score_military REAL"); } catch {}
+try { db.exec("ALTER TABLE game_results ADD COLUMN score_influence REAL"); } catch {}
+try { db.exec("ALTER TABLE game_results ADD COLUMN score_composite REAL"); } catch {}
 
 export default db;

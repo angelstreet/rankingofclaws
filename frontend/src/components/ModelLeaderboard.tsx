@@ -14,6 +14,7 @@ interface ModelEntry {
 interface Props {
   buildUrl: (path: string) => string;
   game: string;
+  session?: string;
 }
 
 function timeAgo(ts: string): string {
@@ -33,20 +34,22 @@ function tierEmoji(elo: number): string {
   return '\u{1F43E}';
 }
 
-export default function ModelLeaderboard({ buildUrl, game }: Props) {
+export default function ModelLeaderboard({ buildUrl, game, session }: Props) {
   const [models, setModels] = useState<ModelEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    fetch(buildUrl(`api/games/models?game=${game}`))
+    let url = `api/games/models?game=${game}`;
+    if (session) url += `&session=${encodeURIComponent(session)}`;
+    fetch(buildUrl(url))
       .then(r => r.json())
       .catch(() => ({ models: [] }))
       .then(data => {
         setModels(data.models || []);
         setLoading(false);
       });
-  }, [game]);
+  }, [game, session]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

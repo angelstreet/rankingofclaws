@@ -11,6 +11,12 @@ interface GameAgent {
   total_games: number;
   best_elo: number;
   last_played: string;
+  score_territory?: number;
+  score_economy?: number;
+  score_military?: number;
+  score_influence?: number;
+  score_composite?: number;
+  model?: string;
 }
 
 interface MatchRecord {
@@ -47,6 +53,7 @@ interface Props {
   gameFilter: string;
   modeFilter: string;
   sessionFilter?: string;
+  isCompositeScore?: boolean;
 }
 
 function tierEmoji(elo: number): string {
@@ -205,7 +212,7 @@ function InlineHistory({ gatewayId, buildUrl }: { gatewayId: string; buildUrl: (
   );
 }
 
-export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter, sessionFilter }: Props) {
+export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter, sessionFilter, isCompositeScore }: Props) {
   const [agents, setAgents] = useState<GameAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -262,18 +269,46 @@ export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter, sess
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{a.agent_name}</span>
+                    {isCompositeScore && a.model && (
+                      <span style={{ fontSize: '0.6rem', color: '#a78bfa', background: '#a78bfa15', padding: '0.1rem 0.35rem', borderRadius: '0.25rem' }}>{a.model}</span>
+                    )}
                     <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>{a.country !== 'unknown' ? a.country : ''}</span>
                   </div>
-                  <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.15rem' }}>
-                    {a.wins}W · {a.losses}L · {a.draws}D
-                  </div>
+                  {isCompositeScore && a.score_composite != null ? (
+                    <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
+                      {[
+                        { label: 'Territory', value: a.score_territory, color: '#22c55e' },
+                        { label: 'Economy', value: a.score_economy, color: '#3b82f6' },
+                        { label: 'Military', value: a.score_military, color: '#ef4444' },
+                        { label: 'Influence', value: a.score_influence, color: '#a78bfa' },
+                      ].map(d => (
+                        <span key={d.label} style={{
+                          fontSize: '0.6rem', fontWeight: 600,
+                          color: d.color, background: d.color + '15',
+                          border: `1px solid ${d.color}30`,
+                          padding: '0.1rem 0.35rem', borderRadius: '0.25rem',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {d.label} {d.value != null ? Math.round(d.value) : '-'}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.15rem' }}>
+                      {isCompositeScore
+                        ? `Score: ${((a.best_elo - 1000) / 10).toFixed(1)}/100`
+                        : `${a.wins}W · ${a.losses}L · ${a.draws}D`}
+                    </div>
+                  )}
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#FFD700' }}>
-                    {tierEmoji(a.best_elo)} {a.best_elo}
+                    {isCompositeScore
+                      ? (a.score_composite != null ? a.score_composite.toFixed(1) : ((a.best_elo - 1000) / 10).toFixed(1))
+                      : `${tierEmoji(a.best_elo)} ${a.best_elo}`}
                   </div>
                   <div style={{ fontSize: '0.65rem', color: '#4b5563' }}>
-                    {a.last_played ? timeAgo(a.last_played) : ''}
+                    {isCompositeScore ? 'composite' : (a.last_played ? timeAgo(a.last_played) : '')}
                   </div>
                 </div>
                 {/* Expand chevron */}
