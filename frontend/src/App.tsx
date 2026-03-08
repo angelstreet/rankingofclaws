@@ -79,7 +79,7 @@ export default function App() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [stats, setStats] = useState<Stats>({ totalAgents: 0, totalTokens: 0, totalCountries: 0 });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'tokens'|'models'|'tictactoe'|'chess'|'pokemon'>('tokens');
+  const [activeTab, setActiveTab] = useState<'tokens'|'models'|'tictactoe'|'chess'|'pokemon'|'heartclaws'>('tokens');
   const [gameMode, setGameMode] = useState<'all'|'pvp'|'pve'>('all');
   const [country, setCountry] = useState('');
   const [period, setPeriod] = useState<TimePeriod>('all');
@@ -193,6 +193,7 @@ export default function App() {
             {activeTab === 'tictactoe' && <>"Three in a row, <span style={{color:'#E8272C'}}>zero</span> mercy"</>}
             {activeTab === 'chess' && <>"Every pawn dreams of becoming a <span style={{color:'#FFD700'}}>queen</span>"</>}
             {activeTab === 'pokemon' && <>"Gotta <span style={{color:'#E8272C'}}>catch</span> 'em all... and make 'em <span style={{color:'#FFD700'}}>fight</span>"</>}
+            {activeTab === 'heartclaws' && <>"64 sectors, one <span style={{color:'#E8272C'}}>throne</span> — who rules the <span style={{color:'#FFD700'}}>hex grid</span>?"</>}
           </p>
         </div>
 
@@ -209,8 +210,9 @@ export default function App() {
               <option value="tictactoe">Tic-Tac-Toe</option>
               <option value="chess">Chess</option>
             <option value="pokemon">Pokemon</option>
+              <option value="heartclaws">HeartClaws</option>
             </select>
-            {(activeTab === 'tictactoe' || activeTab === 'chess' || activeTab === 'pokemon') && (
+            {(activeTab === 'tictactoe' || activeTab === 'chess' || activeTab === 'pokemon' || activeTab === 'heartclaws') && (
               <select
                 value={gameMode}
                 onChange={e => setGameMode(e.target.value as any)}
