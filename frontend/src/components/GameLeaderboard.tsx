@@ -46,6 +46,7 @@ interface Props {
   buildUrl: (path: string) => string;
   gameFilter: string;
   modeFilter: string;
+  sessionFilter?: string;
 }
 
 function tierEmoji(elo: number): string {
@@ -204,21 +205,22 @@ function InlineHistory({ gatewayId, buildUrl }: { gatewayId: string; buildUrl: (
   );
 }
 
-export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter }: Props) {
+export default function GameLeaderboard({ buildUrl, gameFilter, modeFilter, sessionFilter }: Props) {
   const [agents, setAgents] = useState<GameAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
-    fetch(buildUrl(`api/games/leaderboard?game=${gameFilter}&mode=${modeFilter}`))
+    const sessionParam = sessionFilter ? `&session=${encodeURIComponent(sessionFilter)}` : '';
+    fetch(buildUrl(`api/games/leaderboard?game=${gameFilter}&mode=${modeFilter}${sessionParam}`))
       .then(r => r.json())
       .catch(() => ({ agents: [] }))
       .then(lb => {
         setAgents(lb.agents || []);
         setLoading(false);
       });
-  }, [gameFilter, modeFilter]);
+  }, [gameFilter, modeFilter, sessionFilter]);
 
   function toggleExpand(gatewayId: string) {
     setExpandedId(prev => prev === gatewayId ? null : gatewayId);
